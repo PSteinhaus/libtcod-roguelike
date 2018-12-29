@@ -36,7 +36,7 @@ void Engine::update() {
 			}
 			break;
 		case TCODK_RIGHT :
-			if ( ! map->isWall(player->x, player->y-1) ) {
+			if ( ! map->isWall(player->x+1, player->y) ) {
 				player->x++;
 			}
 			break;
