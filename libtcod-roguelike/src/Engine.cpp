@@ -7,7 +7,6 @@ Engine::Engine() {
 	TCODConsole::initRoot(80,50, "libtcod C++ tutorial", false);
 	player = new Actor(40,25,'@',TCODColor::white);
 	actors.push(player);
-	actors.push(new Actor(60,13,'@',TCODColor::yellow));
 	map = new Map(80,45);
 }
 
