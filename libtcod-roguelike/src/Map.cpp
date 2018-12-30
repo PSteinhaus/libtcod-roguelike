@@ -5,6 +5,7 @@
 
 static const int ROOM_MAX_SIZE = 12;
 static const int ROOM_MIN_SIZE = 6;
+static const int MAX_ROOM_MONSTERS = 3;
 
 class BspListener : public ITCODBspCallback {
 private:
@@ -56,6 +57,18 @@ bool Map::isWall(int x, int y) const {
 	return !map->isWalkable(x,y);
 }
 
+bool Map::canWalk(int x, int y) const {
+	if (isWall(x,y)) return false;
+	for (Actor** iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
+		Actor* actor = *iterator;
+		if ( actor->x == x && actor->y == y ) {
+			// there is an actor there. cannot walk
+			return false;
+		}
+	}
+	return true;
+}
+
 bool Map::isExplored(int x, int y) const {
 	return tiles[x+y*width].explored;
 }
@@ -66,6 +79,17 @@ bool Map::isInFov(int x, int y) const {
 		return true;
 	}
 	return false;
+}
+
+void Map::addMonster(int x, int y) {
+	TCODRandom* rng = TCODRandom::getInstance();
+	if ( rng->getInt(0,100) < 80 ) {
+		// create an orc
+		engine.actors.push( new Actor(x,y,'o',"orc",TCODColor::desaturatedGreen) );
+	} else {
+		// create a troll
+		engine.actors.push( new Actor(x,y,'T',"troll",TCODColor::darkerGreen) );
+	}
 }
 
 void Map::computeFov() {
@@ -100,8 +124,12 @@ void Map::createRoom(int x1, int y1, int x2, int y2, bool first=false) {
 		engine.player->y = (y1+y2)/2;
 	} else {
 		TCODRandom* rng = TCODRandom::getInstance();
-		if ( rng->getInt(0,3) == 0 ) {
-			engine.actors.push(new Actor( (x1+x2)/2, (y1+y2)/2, '@', TCODColor::yellow ));
+		int nbMonsters = rng->getInt(0,MAX_ROOM_MONSTERS);
+		while ( nbMonsters > 0 ) {
+			int x = rng->getInt(x1,x2);
+			int y = rng->getInt(y1,y2);
+			if ( canWalk(x,y) ) addMonster(x,y);
+			nbMonsters--;
 		}
 	}
 }

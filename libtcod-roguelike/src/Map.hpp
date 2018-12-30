@@ -14,7 +14,9 @@ public:
 	bool isExplored(int x, int y) const;
 	void computeFov();
 	bool isWall(int x, int y) const;
+	bool canWalk(int x, int y) const;
 	void render() const;
+	void addMonster(int x, int y);
 
 protected:
 	Tile* tiles;
