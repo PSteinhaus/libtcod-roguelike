@@ -1,15 +1,12 @@
-#include "libtcod.hpp"
-#include "Actor.hpp"
-#include "Map.hpp"
-#include "Engine.hpp"
+#include "main.hpp"
 #include <stdio.h>
 
-Actor::Actor(int x, int y, int ch, const char* name, const TCODColor &col) : x(x), y(y), ch(ch), col(col) {
+Actor::Actor(int x, int y, int ch, const char* name, const TCODColor &col) : x(x), y(y), ch(ch), col(col), blocks(true),attacker(NULL),destructible(NULL),ai(NULL) {
 	strcpy(this->name, name);
 }
 
 void Actor::update() {
-	printf ("The %s growls!\n", name);
+	if ( ai ) ai->update(this);
 }
 
 bool Actor::moveOrAttack(int x, int y) {

@@ -1,9 +1,6 @@
-#include "libtcod.hpp"
-#include "Actor.hpp"
-#include "Map.hpp"
-#include "Engine.hpp"
+#include "main.hpp"
 
-Engine engine;
+Engine engine(80,50);
 
 int main() {
 	while ( !TCODConsole::isWindowClosed() ) {
