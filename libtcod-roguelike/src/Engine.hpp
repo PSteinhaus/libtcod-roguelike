@@ -15,6 +15,7 @@ public :
 	int fovRadius;
 	int screenWidth;
 	int screenHeight;
+	Gui* gui;
 
 	Engine(int screenWidth, int screenHeight);
 	~Engine();

@@ -3,18 +3,23 @@
 Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadius(10),
 	screenWidth(screenWidth), screenHeight(screenHeight)
 {
-	TCODConsole::initRoot(screenWidth, screenHeight, "libtcod C++ tutorial", false);
+	TCODConsole::initRoot(screenWidth, screenHeight, "libtcod C++ tutorial", false, TCOD_RENDERER_GLSL);
 	player = new Actor(40,25,'@',"player",TCODColor::white);
 	player->destructible = new PlayerDestructible(30,2,"your cadaver");
 	player->attacker = new Attacker(5);
 	player->ai = new PlayerAi();
+	player->container = new Container(26);
 	actors.push(player);
-	map = new Map(80,45);
+	map = new Map(80,43);
+	gui = new Gui();
+	gui->message(TCODColor::red,
+	"Welcome stranger!\nPrepare to perish in the Tombs of the Ancient Kings.");
 }
 
 Engine::~Engine() {
 	actors.clearAndDelete();
 	delete map;
+	delete gui;
 }
 
 void Engine::update() {
@@ -46,8 +51,11 @@ void Engine::render() {
 	}
 	player->render();
 	// show the player's stats
+	gui->render();
+	/*
 	TCODConsole::root->printf(1,screenHeight-2, "HP : %d/%d",
 		(int)player->destructible->hp, (int)player->destructible->maxHp);
+	*/
 }
 
 void Engine::sendToBack(Actor* actor) {
