@@ -11,6 +11,8 @@ public:
 
 protected:
 	bool moveOrAttack(Actor* owner, int targetX, int targetY);
+	void handleActionKey(Actor* owner, int ascii);
+	Actor* choseFromInventory(Actor* owner);
 };
 
 class MonsterAi : public Ai {
