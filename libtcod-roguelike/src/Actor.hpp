@@ -1,4 +1,4 @@
-class Actor
+class Actor : public Persistent
 {
 public:
 	int x,y;		// position on map
@@ -13,8 +13,10 @@ public:
 	Container* container; // something that can contain actors
 
 	Actor(int x, int y, int ch, const char* name, const TCODColor& col);
-	~Actor();
+	virtual ~Actor();
 	void update();
 	void render() const;
 	float getDistance(int cx, int cy) const;
+	void load(TCODZip& zip);
+	void save(TCODZip& zip);
 };

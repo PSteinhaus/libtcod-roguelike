@@ -1,10 +1,16 @@
-class Useable
+class Useable : public Persistent
 {
 public:
 	virtual bool use(Actor* owner, Actor* user);
+	static Useable* create(TCODZip& zip);
+
+protected:
+	enum UseableType {
+		HEALER,LIGHTNING,FIREBALL,CONFUSER
+	};
 };
 
-class Pickable
+class Pickable : public Persistent
 {
 public:
 	Useable* useable;
@@ -14,6 +20,8 @@ public:
 	bool pick(Actor* owner, Actor* picker);
 	bool use(Actor* owner, Actor* user);
 	void drop(Actor* owner, Actor* carrier);
+	void save(TCODZip& zip);
+	void load(TCODZip& zip);
 };
 
 // USEABLES
@@ -24,6 +32,8 @@ public:
 
 	Healer(float amount);
 	bool use(Actor* owner, Actor* user);
+	void save(TCODZip& zip);
+	void load(TCODZip& zip);
 };
 
 class LightningBolt : public Useable {
@@ -31,6 +41,8 @@ public:
 	float range, damage;
 	LightningBolt(float range, float damage);
 	bool use(Actor* owner, Actor* user);
+	void save(TCODZip& zip);
+	void load(TCODZip& zip);
 };
 
 class Fireball : public LightningBolt {
@@ -39,6 +51,8 @@ public:
 
 	Fireball(float range, float damage, float areaRange);
 	bool use(Actor* owner, Actor* user);
+	void save(TCODZip& zip);
+	void load(TCODZip& zip);
 };
 
 class Confuser : public Useable {
@@ -47,4 +61,6 @@ public:
 	int nbTurns;
 	Confuser(float range, int nbTurns);
 	bool use(Actor* owner, Actor* user);
+	void save(TCODZip& zip);
+	void load(TCODZip& zip);
 };

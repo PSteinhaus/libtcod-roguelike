@@ -1,10 +1,13 @@
 #include "main.hpp"
 
-Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadius(10),
+Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gameStatus(STARTUP), fovRadius(10),
 	screenWidth(screenWidth), screenHeight(screenHeight)
 {
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
 	TCODConsole::initRoot(screenWidth, screenHeight, "libtcod C++ tutorial", false, TCOD_RENDERER_GLSL);
+	gui = new Gui();
+}
+void Engine::init() {
 	player = new Actor(40,25,'@',"player",TCODColor::white);
 	player->destructible = new PlayerDestructible(30,2,"your cadaver");
 	player->attacker = new Attacker(5);
@@ -12,7 +15,7 @@ Engine::Engine(int screenWidth, int screenHeight) : gameStatus(STARTUP), fovRadi
 	player->container = new Container(26);
 	actors.push(player);
 	map = new Map(80,43);
-	gui = new Gui();
+	map->init();
 	gui->message(TCODColor::red,
 	"Welcome stranger!\nPrepare to perish in the Tombs of the Ancient Kings.");
 }

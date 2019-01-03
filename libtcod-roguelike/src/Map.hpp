@@ -1,15 +1,18 @@
-struct Tile {
+struct Tile : public Persistent {
 	bool explored;	// has the player already seen this tile?
 	Tile() : explored(false) {}
+	void load(TCODZip& zip);
+	void save(TCODZip& zip);
 };
 
-class Map
+class Map : public Persistent
 {
 public:
 	int width,height;
 
 	Map(int width, int height);
-	~Map();
+	virtual ~Map();
+	void init();
 	bool isInFov(int x, int y) const;
 	bool isExplored(int x, int y) const;
 	void computeFov();
@@ -18,6 +21,8 @@ public:
 	void render() const;
 	void addMonster(int x, int y);
 	void addItem(int x, int y);
+	void load(TCODZip& zip);
+	void save(TCODZip& zip);
 
 protected:
 	Tile* tiles;

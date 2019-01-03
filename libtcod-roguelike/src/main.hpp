@@ -4,6 +4,7 @@ const int MAX_NAME_LENGTH = 40;
 #include "libtcod.hpp"
 #include "helpers.hpp"
 class Actor;
+#include "Persistent.hpp"
 #include "Destructible.hpp"
 #include "Attacker.hpp"
 #include "Ai.hpp"

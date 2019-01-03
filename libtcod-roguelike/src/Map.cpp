@@ -40,15 +40,18 @@ public:
 Map::Map(int width, int height) : width(width), height(height) {
 	tiles = new Tile[width*height];
 	map = new TCODMap(width,height);
-	TCODBsp bsp(0,0,width,height);
-	bsp.splitRecursive(NULL,6,ROOM_MIN_SIZE+2,ROOM_MIN_SIZE+2,8.0f,8.0f);
-	BspListener listener(*this);
-	bsp.traverseInvertedLevelOrder(&listener,NULL);
 }
 
 Map::~Map() {
 	delete [] tiles;
 	delete map;
+}
+
+void Map::init() {
+	TCODBsp bsp(0,0,width,height);
+	bsp.splitRecursive(NULL,6,ROOM_MIN_SIZE+2,ROOM_MIN_SIZE+2,8.0f,8.0f);
+	BspListener listener(*this);
+	bsp.traverseInvertedLevelOrder(&listener,NULL);
 }
 
 bool Map::isWall(int x, int y) const {
