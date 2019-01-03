@@ -10,10 +10,22 @@ void PlayerAi::update(Actor* owner) {
 	}
 	int dx = 0, dy = 0;
 	switch(engine.lastKey.vk) {
+		case TCODK_KP8 :	// up
 		case TCODK_UP :		dy = -1; break;
+		case TCODK_KP2 :	// down
 		case TCODK_DOWN :	dy = 1; break;
+		case TCODK_KP4 :	// left
 		case TCODK_LEFT :	dx = -1; break;
+		case TCODK_KP6 :	// right
 		case TCODK_RIGHT :	dx = 1; break;
+		case TCODK_KP7 :	// up-left
+							dx =-1; dy =-1; break;
+		case TCODK_KP9 :	// up-right
+							dx =1; dy =-1; break;
+		case TCODK_KP1 :	// down-left
+							dx =-1; dy =1; break;
+		case TCODK_KP3 :	// down-right
+							dx =1; dy =1; break;
 		case TCODK_CHAR :	handleActionKey(owner, engine.lastKey.c); break;
 		default: break;
 	}

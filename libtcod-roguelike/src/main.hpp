@@ -1,5 +1,5 @@
 // Dependency-management-model: "one to rule them all"
-const int MAX_NAME_LENGTH = 12;
+const int MAX_NAME_LENGTH = 40;
 
 #include "libtcod.hpp"
 class Actor;

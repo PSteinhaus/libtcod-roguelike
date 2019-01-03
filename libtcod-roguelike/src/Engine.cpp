@@ -63,3 +63,43 @@ void Engine::sendToBack(Actor* actor) {
 	actors.remove(actor);
 	actors.insertBefore(actor,0);
 }
+
+Actor* Engine::getClosestMonster(bool fovRequired, int x, int y, float range) const {
+	Actor* closest = NULL;
+	float bestDistance = 1E6f;
+	for (Actor** iterator=actors.begin();iterator != actors.end(); iterator++) {
+		Actor* actor = *iterator;
+		if ( actor != player && actor->destructible && !actor->destructible->isDead() ) {
+			float distance = actor->getDistance(x,y);
+			if ( distance < bestDistance && ( distance <= range || range == 0.0f) &&
+				( !fovRequired || map->isInFov(actor->x,actor->y) ) ) {
+				bestDistance = distance;
+				closest = actor;
+			}
+		}
+	}
+	return closest;
+}
+
+bool Engine::pickATile(int* x, int* y, float maxRange) {
+	int cursorX, cursorY;
+	cursorX = engine.player->x;	
+	cursorY = engine.player->y;	
+	while ( !TCODConsole::isWindowClosed() ) {
+		render();
+		// highlight the possible range
+		for (int cx = 0; cx < map->width; cx++)
+			for (int cy = 0; cy < map->height; cy++)
+				if ( map->isInFov(cx,cy) && (maxRange==0 || player->getDistance(cx,cy) <= maxRange) ) {
+					TCODColor col = TCODConsole::root->getCharBackground(cx,cy);
+					col = col * 1.2f;
+					if (col == TCODColor::black) col = TCODColor::darkerGrey;
+					TCODConsole::root->setCharBackground(cx,cy,col);
+				}
+		// display the cursor
+		TCODConsole::root->setChar(cursorX,cursorY, 'x');
+		// react to input (move the cursor or accept)
+		TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS, &lastKey, NULL);
+	}
+	return false;
+}

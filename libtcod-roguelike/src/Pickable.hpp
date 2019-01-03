@@ -24,3 +24,10 @@ public:
 	Healer(float amount);
 	bool use(Actor* owner, Actor* user);
 };
+
+class LightningBolt : public Useable {
+public:
+	float range, damage;
+	LightningBolt(float range, float damage);
+	bool use(Actor* owner, Actor* user);
+};
