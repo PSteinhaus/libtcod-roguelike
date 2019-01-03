@@ -35,7 +35,9 @@ public:
 
 class Fireball : public LightningBolt {
 public:
-	Fireball(float range, float damage);
+	float areaRange;
+
+	Fireball(float range, float damage, float areaRange);
 	bool use(Actor* owner, Actor* user);
 };
 

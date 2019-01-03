@@ -120,7 +120,7 @@ void Map::addItem(int x, int y) {
 			TCODColor::lightYellow);
 		item->blocks = false;
 		item->pickable = new Pickable();
-		item->pickable->useable = new Fireball(6,8);
+		item->pickable->useable = new Fireball(7,10,3);
 	} else if ( dice <= 90+10 ) {
 		// create a scroll of confusion
 		item = new Actor(x,y,'?',"scroll of confusion",

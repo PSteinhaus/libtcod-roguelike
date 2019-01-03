@@ -73,7 +73,7 @@ bool LightningBolt::use(Actor* owner, Actor* user) {
 	return Useable::use(owner,user);
 }
 
-Fireball::Fireball(float range, float damage) : LightningBolt(range,damage) {
+Fireball::Fireball(float range, float damage, float areaRange) : LightningBolt(range,damage), areaRange(areaRange) {
 }
 
 bool Fireball::use(Actor* owner, Actor* user) {
@@ -83,11 +83,11 @@ bool Fireball::use(Actor* owner, Actor* user) {
 		return false;
 	}
 	// burn everything in <range> (including player)
-	engine.gui->message(TCODColor::orange,"The fireball explodes, burning everything within %g tiles!",range);
+	engine.gui->message(TCODColor::orange,"The fireball explodes, burning everything within %g tiles!", areaRange);
 	for (Actor **iterator=engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
 		Actor* actor = *iterator;
 		if ( actor->destructible && !actor->destructible->isDead()
-			&& actor->getDistance(x,y) <= range)
+			&& actor->getDistance(x,y) <= areaRange)
 		{
 			engine.gui->message(TCODColor::orange,"The %s gets burned for %g hit points.",
 			actor->name,damage);
