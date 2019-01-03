@@ -108,14 +108,28 @@ void Map::addItem(int x, int y) {
 		item->blocks = false;
 		item->pickable = new Pickable();
 		item->pickable->useable = new Healer(4);
-	} else if ( dice < 70+10 ) { 
+	} else if ( dice <= 70+10 ) { 
 		// create a scroll of lightning bolt
 		item = new Actor(x,y,'?',"scroll of lightning bolt", TCODColor::lightYellow);
 		item->blocks = false;
 		item->pickable = new Pickable();
 		item->pickable->useable = new LightningBolt(5,20);
+	} else if ( dice <= 80+10 ) {
+		// create a scroll of fireball
+		item = new Actor(x,y,'?',"scroll of fireball",
+			TCODColor::lightYellow);
+		item->blocks = false;
+		item->pickable = new Pickable();
+		item->pickable->useable = new Fireball(6,8);
+	} else if ( dice <= 90+10 ) {
+		// create a scroll of confusion
+		item = new Actor(x,y,'?',"scroll of confusion",
+			TCODColor::lightYellow);
+		item->blocks = false;
+		item->pickable = new Pickable();
+		item->pickable->useable = new Confuser(8,8);
 	}
-	if (item) engine.actors.push(item);
+	if (item) engine.actors.insertBefore(item,0);
 }
 
 void Map::computeFov() {
@@ -159,7 +173,7 @@ void Map::createRoom(int x1, int y1, int x2, int y2, bool first=false) {
 		}
 	}
 	// add items
-	int nbItems=rng->getInt(0,MAX_ROOM_ITEMS);
+	int nbItems=rng->getInt(0,MAX_ROOM_ITEMS+20);
 	while (nbItems > 0) {
 		int x=rng->getInt(x1,x2);
 		int y=rng->getInt(y1,y2);

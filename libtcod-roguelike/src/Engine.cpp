@@ -83,8 +83,8 @@ Actor* Engine::getClosestMonster(bool fovRequired, int x, int y, float range) co
 
 bool Engine::pickATile(int* x, int* y, float maxRange) {
 	int cursorX, cursorY;
-	cursorX = engine.player->x;	
-	cursorY = engine.player->y;	
+	cursorX = player->x;	
+	cursorY = player->y;	
 	while ( !TCODConsole::isWindowClosed() ) {
 		render();
 		// highlight the possible range
@@ -96,10 +96,51 @@ bool Engine::pickATile(int* x, int* y, float maxRange) {
 					if (col == TCODColor::black) col = TCODColor::darkerGrey;
 					TCODConsole::root->setCharBackground(cx,cy,col);
 				}
+		// check for collision and draw a line
+		int lineX = player->x;
+		int lineY = player->y;
+		bool collision = false;
+		TCODLine::init(lineX,lineY, cursorX,cursorY);
+		do {
+			// draw the line
+			TCODColor col = TCODConsole::root->getCharBackground(lineX,lineY);
+			col = col * 2.0f;
+			TCODConsole::root->setCharBackground(lineX,lineY,col);
+			// check for collision
+			if ( map->isWall(lineX,lineY) ) { collision = true; break; }
+		} while ( !TCODLine::step(&lineX,&lineY) );
 		// display the cursor
-		TCODConsole::root->setChar(cursorX,cursorY, 'x');
-		// react to input (move the cursor or accept)
+		TCODColor front = TCODColor::lightRed;
+		TCODColor back  = TCODColor::darkerRed;
+		if ( !collision && player->getDistance(cursorX,cursorY) <= maxRange ) {
+			front = TCODColor::lightGreen;
+			back = TCODColor::darkerGreen;
+		}
+		TCODConsole::root->putCharEx(cursorX,cursorY,'x',front,back);
+
+		TCODConsole::flush();
+
+		// react to input (move the cursor, accept or escape)
 		TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS, &lastKey, NULL);
+		numpadMove(&cursorX, &cursorY);
+		switch(lastKey.vk) {
+			case TCODK_ENTER :	*x = lineX;
+								*y = lineY;
+								return true;
+			case TCODK_ESCAPE :	return false;
+			default: break;
+		}
 	}
 	return false;
+}
+
+Actor* Engine::getActor(int x, int y, bool aliveRequired) const {
+	for (Actor** it = actors.begin(); it != actors.end(); it++) {
+		Actor* actor = *it;
+		if ( actor->x == x && actor->y == y && ( !aliveRequired ||
+			(actor->destructible && !actor->destructible->isDead()) ) ) {
+			return actor;
+		}
+	}
+	return NULL;
 }

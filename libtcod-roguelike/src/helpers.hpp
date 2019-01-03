@@ -1,0 +1,1 @@
+void numpadMove(int* x, int* y);

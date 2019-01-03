@@ -9,23 +9,9 @@ void PlayerAi::update(Actor* owner) {
 		return;
 	}
 	int dx = 0, dy = 0;
+	numpadMove(&dx, &dy);
+	if ( engine.lastKey.vk == TCODK_KP5 ) engine.gameStatus = Engine::NEW_TURN;
 	switch(engine.lastKey.vk) {
-		case TCODK_KP8 :	// up
-		case TCODK_UP :		dy = -1; break;
-		case TCODK_KP2 :	// down
-		case TCODK_DOWN :	dy = 1; break;
-		case TCODK_KP4 :	// left
-		case TCODK_LEFT :	dx = -1; break;
-		case TCODK_KP6 :	// right
-		case TCODK_RIGHT :	dx = 1; break;
-		case TCODK_KP7 :	// up-left
-							dx =-1; dy =-1; break;
-		case TCODK_KP9 :	// up-right
-							dx =1; dy =-1; break;
-		case TCODK_KP1 :	// down-left
-							dx =-1; dy =1; break;
-		case TCODK_KP3 :	// down-right
-							dx =1; dy =1; break;
 		case TCODK_CHAR :	handleActionKey(owner, engine.lastKey.c); break;
 		default: break;
 	}
@@ -68,21 +54,20 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 	switch(ascii) {
 		case 'g' : // pickup item
 		{
-			bool found = false;
+			Actor* topItem = NULL;
 			for (Actor** iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
 				Actor* actor = *iterator;
 				if ( actor->pickable && actor->x == owner->x && actor->y == owner->y ) {
-					if (actor->pickable->pick(actor,owner)) {
-						found = true;
-						engine.gui->message(TCODColor::lightGrey,"You pick up the %s.", actor->name);
-						break;
-					} else if (!found) {
-						found = true;
-						engine.gui->message(TCODColor::red,"Your inventory is full.");
-					}
+					topItem = actor;
 				}
 			}
-			if (!found) {
+			if (topItem) {
+				if (topItem->pickable->pick(topItem,owner)) {
+					engine.gui->message(TCODColor::lightGrey,"You pick up the %s.", topItem->name);
+				} else {
+					engine.gui->message(TCODColor::red,"Your inventory is full.");
+				}
+			} else {
 				engine.gui->message(TCODColor::lightGrey,"There's nothing here that you can pick up.");
 			}
 			engine.gameStatus = Engine::NEW_TURN;
@@ -93,6 +78,15 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 			Actor* actor = choseFromInventory(owner);
 			if ( actor ) {
 				actor->pickable->use(actor,owner);
+				engine.gameStatus = Engine::NEW_TURN;
+			}
+		}
+		break;
+		case 'd' : // drop item
+		{
+			Actor* actor = choseFromInventory(owner);
+			if ( actor ) {
+				actor->pickable->drop(actor,owner);
 				engine.gameStatus = Engine::NEW_TURN;
 			}
 		}
@@ -169,5 +163,40 @@ void MonsterAi::moveOrAttack(Actor* owner, int targetX, int targetY) {
 		owner->x += stepdx;
 	} else if ( engine.map->canWalk(owner->x, owner->y+stepdy) ) {
 		owner->y += stepdy;
+	}
+}
+
+ConfusedMonsterAi::ConfusedMonsterAi(int nbTurns, Ai* oldAi) : nbTurns(nbTurns),oldAi(oldAi) {
+}
+
+void ConfusedMonsterAi::update(Actor* owner) {
+	if ( owner->destructible && owner->destructible->isDead() ) {
+		return;
+	}
+	TCODRandom* rng = TCODRandom::getInstance();
+	int dx = rng->getInt(-1,1);
+	int dy = rng->getInt(-1,1);
+	if ( dx != 0 || dy != 0 ) {
+		int destX = owner->x+dx;
+		int destY = owner->y+dy;
+		if ( engine.map->canWalk(destX,destY) ) {
+			owner->x = destX;
+			owner->y = destY;
+		} else {
+			Actor* actor = engine.getActor(destX,destY);
+			if ( actor && owner->attacker ) {
+				owner->attacker->attack(owner, actor);
+			}
+		}
+	}
+	if ( owner == engine.player ) {
+		TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS,&engine.lastKey,NULL,true);
+		engine.gameStatus = Engine::NEW_TURN;
+	}
+	nbTurns--;
+	if (nbTurns == 0) {
+		// restore the old Ai
+		owner->ai = oldAi;
+		delete this;
 	}
 }
