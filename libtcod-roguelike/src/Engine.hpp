@@ -25,6 +25,7 @@ public :
 	Actor* getClosestMonster(bool fovRequired,int x, int y, float range = 0.0f) const;
 	bool pickATile(int* x, int* y, float maxRange = 0.0f);
 	void init();
+	void terminate();
 	void load();
 	void save();
 	Actor* getActor(int x, int y, bool aliveRequired = true) const;

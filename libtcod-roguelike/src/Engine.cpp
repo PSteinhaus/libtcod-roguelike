@@ -18,11 +18,17 @@ void Engine::init() {
 	map->init();
 	gui->message(TCODColor::red,
 	"Welcome stranger!\nPrepare to perish in the Tombs of the Ancient Kings.");
+	gameStatus = STARTUP;
+}
+
+void Engine::terminate() {
+	actors.clearAndDelete();
+	if ( map ) delete map;
+	gui->clear();
 }
 
 Engine::~Engine() {
-	actors.clearAndDelete();
-	delete map;
+	terminate();
 	delete gui;
 }
 
@@ -31,6 +37,10 @@ void Engine::update() {
 	gameStatus=IDLE;
 
 	TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS, &lastKey, NULL);
+	if (lastKey.vk == TCODK_ESCAPE) {
+		save();
+		load();
+	}
 	player->update();
 	if ( gameStatus == NEW_TURN ) {
 		for (Actor** iterator=actors.begin(); iterator != actors.end(); iterator++) {

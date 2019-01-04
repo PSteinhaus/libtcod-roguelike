@@ -1,4 +1,45 @@
+/* a=target variable, b=bit number to act upon 0-n */
+#ifndef BIT_MACROS
+#define BIT_MACROS
+#define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
+#define BIT_CLEAR(a,b) ((a) &= ~(1ULL<<(b)))
+#define BIT_FLIP(a,b) ((a) ^= (1ULL<<(b)))
+#define BIT_CHECK(a,b) (!!((a) & (1ULL<<(b))))        // '!!' to make sure this returns 0 or 1
+#endif
+
 #include "main.hpp"
+
+// it's not yet sure whether using BitArrays will have any advantage because of the final compression
+static BitArray bitArray;
+
+BitArray::BitArray(TCODZip* zipPtr) : array(0),bitNum(0) {
+	if (zipPtr) array = zipPtr->getChar();	// to start in reading-mode
+}
+
+void BitArray::save(TCODZip& zip, bool value) {
+	// check for free space, if false save the bitArray to zip and start a new one
+	if (bitNum >= 8) {
+		finish(zip);
+	}
+	if (value) BIT_SET(array,bitNum);
+	bitNum++;
+}
+
+bool BitArray::load(TCODZip& zip) {
+	// check for invalid index, if true load the next char from zip
+	if ( bitNum >= 8 ) {
+		array = zip.getChar();
+		bitNum = 0;
+	}
+	return BIT_CHECK(array,bitNum++);
+}
+
+void BitArray::finish(TCODZip& zip) {
+	// save the current bitArray and reinitialize
+	zip.putChar(array);
+	array = 0;
+	bitNum = 0;
+}
 
 void Engine::save() {
 	if ( player->destructible->isDead() ) {
@@ -25,8 +66,25 @@ void Engine::save() {
 }
 
 void Engine::load() {
-	if ( TCODSystem::fileExists("game.sav") ) {
+	engine.gui->menu.clear();
+	engine.gui->menu.addItem(Menu::NEW_GAME,"New game");
+	if ( TCODSystem::fileExists("game.sav")) {
+		engine.gui->menu.addItem(Menu::CONTINUE,"Continue");
+	}
+	engine.gui->menu.addItem(Menu::EXIT,"Exit");
+
+	Menu::MenuItemCode menuItem=engine.gui->menu.pick();
+	if ( menuItem == Menu::EXIT || menuItem == Menu::NONE ) {
+		// Exit or window closed
+		exit(0);
+	} else if ( menuItem == Menu::NEW_GAME ) {
+		// New game
+		engine.terminate();
+		engine.init();
+	} else {
 		TCODZip zip;
+		// continue a saved game
+		engine.terminate();
 		zip.loadFromFile("game.sav");
 		// load the player
 		player = new Actor(0,0,0,"",TCODColor::white);
@@ -47,8 +105,8 @@ void Engine::load() {
 		}
 		// finally the message log
 		gui->load(zip);
-	} else {
-		init();
+		// to force FOV recomputation
+		gameStatus = STARTUP;
 	}
 }
 
@@ -71,10 +129,13 @@ void Gui::load(TCODZip& zip) {
 }
 
 void Map::save(TCODZip& zip) {
+	bitArray = BitArray();
 	// iterate over the whole map and save every tile
 	for (int i = 0; i < width*height; i++) {
 		tiles[i].save(zip);
 	}
+	// save the last bit array
+	bitArray.finish(zip);
 	// save the map (libtcod-map-container)
 	for (int x = 0; x < width; x++)
 		for (int y = 0; y < height; y++) {
@@ -84,6 +145,8 @@ void Map::save(TCODZip& zip) {
 }
 
 void Map::load(TCODZip& zip) {
+	// load the first bit array
+	bitArray = BitArray(&zip);
 	// iterate over the whole map and load every tile
 	for (int i = 0; i < width*height; i++) {
 		tiles[i].load(zip);
@@ -96,11 +159,13 @@ void Map::load(TCODZip& zip) {
 }
 
 void Tile::save(TCODZip& zip) {
-	zip.putInt(explored);
+	bitArray.save(zip, explored);
+	//zip.putInt(explored);
 }
 
 void Tile::load(TCODZip& zip) {
-	explored = zip.getInt();
+	explored = bitArray.load(zip);
+	//explored = zip.getInt();
 }
 
 void Actor::save(TCODZip& zip) {
