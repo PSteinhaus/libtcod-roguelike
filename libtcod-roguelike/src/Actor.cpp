@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-Actor::Actor(int x, int y, int ch, const char* name, const TCODColor &col) : x(x), y(y), ch(ch), col(col), blocks(true),
+Actor::Actor(int x, int y, int ch, const char* name, const TCODColor &col) : x(x), y(y), ch(ch), col(col), blocks(true), fovOnly(true),
 attacker(NULL),destructible(NULL),ai(NULL),pickable(NULL),container(NULL) {
 	strcpy(this->name, name);
 }

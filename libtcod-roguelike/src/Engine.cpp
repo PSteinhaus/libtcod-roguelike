@@ -1,7 +1,7 @@
 #include "main.hpp"
 
 Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gameStatus(STARTUP), fovRadius(10),
-	screenWidth(screenWidth), screenHeight(screenHeight)
+	screenWidth(screenWidth), screenHeight(screenHeight), level(1)
 {
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
 	TCODConsole::initRoot(screenWidth, screenHeight, "libtcod C++ tutorial", false, TCOD_RENDERER_GLSL);
@@ -14,6 +14,11 @@ void Engine::init() {
 	player->ai = new PlayerAi();
 	player->container = new Container(26);
 	actors.push(player);
+	// stairs
+	stairs = new Actor(0,0,'>',"stairs",TCODColor::white);
+	stairs->blocks = false;
+	stairs->fovOnly = false;
+	actors.push(stairs);
 	map = new Map(80,43);
 	map->init();
 	gui->message(TCODColor::red,
@@ -59,7 +64,8 @@ void Engine::render() {
 	// draw the actors
 	for (Actor** iterator=actors.begin(); iterator != actors.end(); iterator++) {
 		Actor* actor = *iterator;
-		if ( map->isInFov(actor->x, actor->y) ) {
+		if ( actor != player && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
+			|| map->isInFov(actor->x,actor->y)) ) {
 			actor->render();
 		}
 	}
@@ -156,4 +162,21 @@ Actor* Engine::getActor(int x, int y, bool aliveRequired) const {
 		}
 	}
 	return NULL;
+}
+
+void Engine::nextLevel() {
+	level++;
+	gui->message(TCODColor::red,"You descend\ndeeper into the heart of the dungeon...");
+	delete map;
+	// delete all actors but player and stairs
+	for (Actor **it=actors.begin(); it!=actors.end(); it++) {
+		if ( *it != player && *it != stairs ) {
+			delete *it;
+			it = actors.remove(it);
+		}
+	}
+	// create a new map
+	map = new Map(80,43);
+	map->init();
+	gameStatus = STARTUP;
 }

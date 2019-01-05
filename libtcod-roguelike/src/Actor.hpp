@@ -5,7 +5,8 @@ public:
 	int ch;			// ascii code
 	TCODColor col;	// color
 	char name [ MAX_NAME_LENGTH ]; // the actor's name
-	int blocks;		// can we walk on this actor?
+	bool blocks;		// can we walk on this actor?
+	bool fovOnly;		// only display when in fov
 	Attacker* attacker; // something that deals damage
 	Destructible* destructible; // something that can be damaged
 	Ai* ai;			// something self-updating

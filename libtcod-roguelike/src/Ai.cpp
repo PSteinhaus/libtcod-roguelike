@@ -91,6 +91,21 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 			}
 		}
 		break;
+		case '<' :
+			if ( engine.lastKey.shift ) {
+				if ( engine.stairs->x == owner->x && engine.stairs->y == owner->y ) {
+					engine.nextLevel();
+				} else {
+					engine.gui->message(TCODColor::lightGrey,"There are no downstairs here.");
+				}
+			} else {
+				if ( engine.stairs->x == owner->x && engine.stairs->y == owner->y ) {
+					//engine.nextLevel();
+				} else {
+					engine.gui->message(TCODColor::lightGrey,"There are no upstairs here.");
+				}
+			}
+		break;
 	}
 }
 

@@ -8,6 +8,8 @@ static const int BAR_WIDTH = 20;
 static const int MSG_X = BAR_WIDTH+2;
 static const int MSG_HEIGHT = PANEL_HEIGHT-1;
 static const int MAX_LOG_SIZE = 30;
+static const int PAUSE_MENU_WIDTH = 30;
+static const int PAUSE_MENU_HEIGHT = 15;
 
 Gui::Gui() {
 	con = new TCODConsole(engine.screenWidth, PANEL_HEIGHT);
@@ -26,6 +28,9 @@ void Gui::render() {
 	// clear the GUI console
 	con->setDefaultBackground(TCODColor::black);
 	con->clear();
+	// dungeon level
+	con->setDefaultForeground(TCODColor::white);
+	con->printf(3,3,"DEPTH: %d",engine.level);
 	// draw the health bar
 	renderBar(1,1,BAR_WIDTH,"HP",engine.player->destructible->hp,
 		engine.player->destructible->maxHp, TCODColor::lightRed, TCODColor::darkerRed);
@@ -104,8 +109,21 @@ void Menu::addItem(MenuItemCode code, const char* label) {
 	items.push(item);
 }
 
-Menu::MenuItemCode Menu::pick() {
+Menu::MenuItemCode Menu::pick(DisplayMode mode) {
 	int selectedItem = 0;
+	int menuX, menuY;
+	if ( mode == PAUSE ) {
+		menuX=engine.screenWidth/2-PAUSE_MENU_WIDTH/2;
+		menuY=engine.screenHeight/2-PAUSE_MENU_HEIGHT/2;
+		TCODConsole::root->setDefaultForeground(TCODColor(200,180,50));
+		TCODConsole::root->printFrame(menuX,menuY,PAUSE_MENU_WIDTH,PAUSE_MENU_HEIGHT,true,
+			TCOD_BKGND_ALPHA(70),"Menu");
+		menuX+=2;
+		menuY+=3;
+	} else {
+		menuX = 10;
+		menuY = TCODConsole::root->getHeight()/3;
+	}
 	while ( !TCODConsole::isWindowClosed() ) {
 		int currentItem=0;
 		for (MenuItem **it=items.begin(); it!=items.end(); it++) {
@@ -114,7 +132,7 @@ Menu::MenuItemCode Menu::pick() {
 			} else {
 				TCODConsole::root->setDefaultForeground(TCODColor::lightGrey);
 			}
-			TCODConsole::root->printf(10,10+currentItem*3,(*it)->label);
+			TCODConsole::root->printf(menuX,menuY+currentItem*3,(*it)->label);
 			currentItem++;
 		}
 		TCODConsole::flush();
