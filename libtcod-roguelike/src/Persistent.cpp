@@ -117,10 +117,13 @@ void Engine::load() {
 }
 
 void Gui::save(TCODZip& zip) {
-	zip.putInt(log.size());
-	for (Message** it=log.begin(); it!=log.end(); it++) {
-		zip.putString((*it)->text);
-		zip.putColor(&(*it)->col);
+	int size = log.size();
+	zip.putInt(size);
+	Message* message;
+	for (int i = size-1; i >= 0; i--) {
+		message = log.get(i);
+		zip.putString(message->text);
+		zip.putColor(&message->col);
 	}
 }
 
@@ -140,14 +143,14 @@ void Map::save(TCODZip& zip) {
 	for (int i = 0; i < width*height; i++) {
 		tiles[i].save(zip);
 	}
-	// save the last bit array
-	bitArray.finish(zip);
 	// save the map (libtcod-map-container)
 	for (int x = 0; x < width; x++)
 		for (int y = 0; y < height; y++) {
-			zip.putInt(map->isTransparent(x,y));
-			zip.putInt(isWall(x,y));
+			bitArray.save(zip, map->isTransparent(x,y));
+			bitArray.save(zip, isWall(x,y));
 		}
+	// save the last bit array
+	bitArray.finish(zip);
 }
 
 void Map::load(TCODZip& zip) {
@@ -160,7 +163,7 @@ void Map::load(TCODZip& zip) {
 	// load the map (libtcod-map-container)
 	for (int x = 0; x < width; x++)
 		for (int y = 0; y < height; y++) {
-			map->setProperties(x,y,!zip.getInt(),zip.getInt());
+			map->setProperties(x,y,!bitArray.load(zip),bitArray.load(zip));
 		}
 }
 
