@@ -110,27 +110,31 @@ void Map::addItem(int x, int y) {
 		item = new Actor(x,y,'!',"health potion", TCODColor::violet);
 		item->blocks = false;
 		item->pickable = new Pickable();
-		item->pickable->useable = new Healer(4);
+		item->pickable->useable = new Useable(NULL,new HealthEffect(4,NULL));
 	} else if ( dice <= 70+10 ) { 
 		// create a scroll of lightning bolt
 		item = new Actor(x,y,'?',"scroll of lightning bolt", TCODColor::lightYellow);
 		item->blocks = false;
 		item->pickable = new Pickable();
-		item->pickable->useable = new LightningBolt(5,20);
+		item->pickable->useable = new Useable(
+			new TargetSelector(TargetSelector::CLOSEST_MONSTER,5),
+			new HealthEffect(-20,"A lighting bolt strikes the %s with a loud thunder!\nThe damage is %g hit points.") );
 	} else if ( dice <= 80+10 ) {
 		// create a scroll of fireball
-		item = new Actor(x,y,'?',"scroll of fireball",
-			TCODColor::lightYellow);
+		item = new Actor(x,y,'?',"scroll of fireball",TCODColor::lightYellow);
 		item->blocks = false;
 		item->pickable = new Pickable();
-		item->pickable->useable = new Fireball(7,10,3);
+		item->pickable->useable = new Useable(
+			new TargetSelector(TargetSelector::SELECTED_RANGE,5,3),
+			new HealthEffect(-12,"The %s gets burned for %g hit points.") );
 	} else if ( dice <= 90+10 ) {
 		// create a scroll of confusion
-		item = new Actor(x,y,'?',"scroll of confusion",
-			TCODColor::lightYellow);
+		item = new Actor(x,y,'?',"scroll of confusion",TCODColor::lightYellow);
 		item->blocks = false;
 		item->pickable = new Pickable();
-		item->pickable->useable = new Confuser(8,8);
+		item->pickable->useable = new Useable(
+			new TargetSelector(TargetSelector::SELECTED_MONSTER,5),
+			new ConfusionEffect(8,"The eyes of the %s look vacant,\nas he starts to stumble around!") );
 	}
 	if (item) engine.actors.insertBefore(item,0);
 }
@@ -176,7 +180,7 @@ void Map::createRoom(int x1, int y1, int x2, int y2, bool first=false) {
 		}
 	}
 	// add items
-	int nbItems=rng->getInt(0,MAX_ROOM_ITEMS+20);
+	int nbItems=rng->getInt(0,MAX_ROOM_ITEMS);
 	while (nbItems > 0) {
 		int x=rng->getInt(x1,x2);
 		int y=rng->getInt(y1,y2);

@@ -4,7 +4,7 @@ Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gam
 	screenWidth(screenWidth), screenHeight(screenHeight), level(1)
 {
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
-	TCODConsole::initRoot(screenWidth, screenHeight, "libtcod C++ tutorial", false, TCOD_RENDERER_SDL);
+	TCODConsole::initRoot(screenWidth, screenHeight, "witchRogue prototype", false, TCOD_RENDERER_SDL);
 	gui = new Gui();
 }
 void Engine::init() {

@@ -307,64 +307,77 @@ void Pickable::save(TCODZip& zip) {
 }
 
 void Pickable::load(TCODZip& zip) {
-	useable = Useable::create(zip);
-}
-
-Useable* Useable::create(TCODZip& zip) {
-	UseableType type = (UseableType)zip.getInt();
-	Useable* useable = NULL;
-	switch(type) {
-		case HEALER : useable = new Healer(0); break;
-		case LIGHTNING : useable = new LightningBolt(0,0); break;
-		case FIREBALL : useable = new Fireball(0,0,0); break;
-		case CONFUSER : useable = new Confuser(0,0); break;
-	}
+	useable = new Useable(NULL,NULL);
 	useable->load(zip);
-	return useable;
 }
 
-void Healer::save(TCODZip& zip) {
-	zip.putInt(HEALER);
-	zip.putFloat(amount);
+void Useable::save(TCODZip& zip) {
+	zip.putInt( !!selector ); // has selector
+	if (selector) selector->save(zip);
+	effect->save(zip);
 }
 
-void Healer::load(TCODZip& zip) {
-	amount = zip.getFloat();
+void Useable::load(TCODZip& zip) {
+	if ( zip.getInt() ) {
+		selector =	new TargetSelector(TargetSelector::CLOSEST_MONSTER,0);
+		selector->load(zip);
+	}
+	effect =	Effect::create(zip);
 }
 
-void LightningBolt::save(TCODZip& zip) {
-	zip.putInt(LIGHTNING);
+void TargetSelector::save(TCODZip& zip) {
+	zip.putInt((int)type);
 	zip.putFloat(range);
-	zip.putFloat(damage);
-}
-
-void LightningBolt::load(TCODZip& zip) {
-	range = zip.getFloat();
-	damage = zip.getFloat();
-}
-
-void Fireball::save(TCODZip& zip) {
-	zip.putInt(FIREBALL);
-	zip.putFloat(range);
-	zip.putFloat(damage);
 	zip.putFloat(areaRange);
 }
 
-void Fireball::load(TCODZip& zip) {
+void TargetSelector::load(TCODZip& zip) {
+	type = (SelectorType)zip.getInt();
 	range = zip.getFloat();
-	damage = zip.getFloat();
 	areaRange = zip.getFloat();
 }
 
-void Confuser::save(TCODZip& zip) {
-	zip.putInt(CONFUSER);
-	zip.putFloat(range);
-	zip.putFloat(nbTurns);
+Effect* Effect::create(TCODZip& zip) {
+	EffectType type = (EffectType)zip.getInt();
+	Effect* effect = NULL;
+	switch(type) {
+		case HEALTH : effect = new HealthEffect(0,NULL); break;
+		case CONFUSE : effect = new ConfusionEffect(0,NULL); break;
+	}
+	effect->load(zip);
+	return effect;
 }
 
-void Confuser::load(TCODZip& zip) {
-	range = zip.getFloat();
-	nbTurns = zip.getFloat();
+// Effects
+
+void HealthEffect::save(TCODZip& zip) {
+	zip.putInt(HEALTH);
+	zip.putFloat(amount);
+	zip.putInt( !!message ); // has selector
+	if (message) {
+		const char* msg = message;
+		zip.putString(msg);
+	}
+}
+
+void HealthEffect::load(TCODZip& zip) {
+	amount = zip.getFloat();
+	if ( zip.getInt() ) message = zip.getString();
+}
+
+void ConfusionEffect::save(TCODZip& zip) {
+	zip.putInt(CONFUSE);
+	zip.putInt(nbTurns);
+	zip.putInt( !!message ); // has selector
+	if (message) {
+		const char* msg = message;
+		zip.putString(msg);
+	}
+}
+
+void ConfusionEffect::load(TCODZip& zip) {
+	nbTurns = zip.getInt();
+	if ( zip.getInt() ) message = zip.getString();
 }
 
 // AIs
