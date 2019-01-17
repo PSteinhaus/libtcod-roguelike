@@ -85,23 +85,35 @@ bool Map::isInFov(int x, int y) const {
 void Map::addMonster(int x, int y) {
 	TCODRandom* rng = TCODRandom::getInstance();
 	if ( rng->getInt(0,100) < 80 ) {
+		/*
 		// create an orc
 		Actor *orc = new Actor(x,y,'o',"orc", TCODColor::desaturatedGreen);
 		orc->destructible = new MonsterDestructible(10,0,"dead orc");
 		orc->attacker = new Attacker(3);
 		orc->ai = new MonsterAi();
 		engine.actors.push(orc);
+		*/
+		// create a rat
+		Actor *rat = new Actor(x,y,'r',"rat", TCODColor::grey);
+		rat->destructible = new MonsterDestructible(7,0,"rat corpse");
+		rat->attacker = new Attacker(4);
+		rat->ai = new MonsterAi();
+		engine.actors.push(rat);
 	} else {
 		// create a troll
+		/*
 		Actor *troll = new Actor(x,y,'T',"troll", TCODColor::darkerGreen);
 		troll->destructible = new MonsterDestructible(16,1,"troll carcass");
 		troll->attacker = new Attacker(4);
 		troll->ai = new MonsterAi();
 		engine.actors.push(troll); 
+		*/
 	}
 }
 
 void Map::addItem(int x, int y) {
+	/*	// on ice, until I figure out what items I want and how to distribute them
+
 	TCODRandom* rng = TCODRandom::getInstance();
 	int dice = rng->getInt(1,100);
 	Actor* item = NULL;
@@ -136,7 +148,8 @@ void Map::addItem(int x, int y) {
 			new TargetSelector(TargetSelector::SELECTED_MONSTER,5),
 			new ConfusionEffect(8,"The eyes of the %s look vacant,\nas he starts to stumble around!") );
 	}
-	if (item) engine.actors.insertBefore(item,0);
+	if (item) engine.actors.insertBefore(item,0); 
+	*/
 }
 
 void Map::computeFov() {

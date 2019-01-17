@@ -15,8 +15,9 @@ public:
 	Stomach* stomach; // a container that can contain actors to be digested
 	float volume;
 	float weight;
+	float nutrition; // how much nutrition an actor with a stomach could get out of this actor
 
-	Actor(int x, int y, int ch, const char* name, const TCODColor& col, float volume = 0, float weight = 0);
+	Actor(int x, int y, int ch, const char* name, const TCODColor& col, float volume = 0, float weight = 0, float nutrition = 0);
 	virtual ~Actor();
 	void update();
 	void render() const;

@@ -21,8 +21,9 @@ public:
 	float nutrition;
 	float maxNutrition;
 	float need;
+	float digestionRate;
 
-	Stomach(float maxNutrition, float need, int size, float maxVolume=0, float nutrition=-1);
+	Stomach(float maxNutrition, float need, float digestionRate, int size, float maxVolume=0, float nutrition=-1);
 	void digest(Actor* owner);
 	void load(TCODZip& zip);
 	void save(TCODZip& zip);

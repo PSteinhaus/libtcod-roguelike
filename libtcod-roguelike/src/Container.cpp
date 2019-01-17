@@ -33,9 +33,41 @@ float Container::getVolume() {
 	return totalVolume;
 }
 
-Stomach::Stomach(float maxNutrition, float need, int size, float maxVolume, float nutrition) : Container::Container(size,maxVolume),
-	nutrition(nutrition),maxNutrition(maxNutrition),need(need)
+Stomach::Stomach(float maxNutrition, float need, float digestionRate, int size, float maxVolume, float nutrition) : Container::Container(size,maxVolume),
+	nutrition(nutrition),maxNutrition(maxNutrition),need(need),digestionRate(digestionRate)
 {
 	// fill stomach completely as standard ( nutrition=-1 is standard )
 	if ( nutrition == -1 ) nutrition = maxNutrition;
+}
+
+// digest AND control hunger/starvation (basically a kind of stomach AI)
+void Stomach::digest(Actor* owner) {
+	// check whether there is something digestible inside the stomach and if true digest the first thing (the oldest)
+	for(Actor** it=inventory.begin(); it != inventory.end(); it++) {
+		Actor* food = *it;
+		if ( food->nutrition > 0 ) {
+			food->nutrition -= digestionRate;
+			nutrition += digestionRate;
+			if ( food->nutrition < 0 ) {
+				nutrition += food->nutrition;
+			}
+			// if completely digested delete the actor
+			if (food->nutrition <= 0) {
+				inventory.remove(food);
+				delete food;
+			}
+			break;
+		}
+	}
+	if (owner->destructible) {
+		// heal the owner of this stomach a little
+		owner->destructible->heal( need/10 );
+		// starvation
+		if (nutrition <= 0)
+			owner->destructible->takeDamage(owner, 1, true);
+	}
+	// hunger
+	nutrition -= need;
+	if ( nutrition < 0 ) nutrition = 0;
+	if (nutrition > maxNutrition) nutrition = maxNutrition;
 }

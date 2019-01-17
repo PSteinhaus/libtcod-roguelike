@@ -186,6 +186,7 @@ void Actor::save(TCODZip& zip) {
 	zip.putInt(blocks);
 	zip.putFloat(volume);
 	zip.putFloat(weight);
+	zip.putFloat(nutrition);
 	// save component flags
 	zip.putInt(attacker != NULL);
 	zip.putInt(destructible != NULL);
@@ -211,6 +212,7 @@ void Actor::load(TCODZip& zip) {
 	blocks=zip.getInt();
 	volume=zip.getFloat();
 	weight=zip.getFloat();
+	nutrition=zip.getFloat();
 	// load component flags
 	bool hasAttacker=zip.getInt();
 	bool hasDestructible=zip.getInt();
@@ -238,7 +240,7 @@ void Actor::load(TCODZip& zip) {
 		container->load(zip);
 	}
 	if ( hasStomach ) {
-		stomach = new Stomach(0,0,0);
+		stomach = new Stomach(0,0,0,0);
 		stomach->load(zip);
 	}
 }
@@ -277,6 +279,7 @@ void Stomach::save(TCODZip& zip) {
 	zip.putFloat( nutrition );
 	zip.putFloat( maxNutrition );
 	zip.putFloat( need );
+	zip.putFloat( digestionRate );
 }
 
 void Stomach::load(TCODZip& zip) {
@@ -284,6 +287,7 @@ void Stomach::load(TCODZip& zip) {
 	nutrition = zip.getFloat();
 	maxNutrition = zip.getFloat();
 	need = zip.getFloat();
+	digestionRate = zip.getFloat();
 }
 
 void Destructible::save(TCODZip& zip) {
