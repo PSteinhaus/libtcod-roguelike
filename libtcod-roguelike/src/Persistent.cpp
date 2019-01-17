@@ -184,18 +184,22 @@ void Actor::save(TCODZip& zip) {
 	zip.putColor(&col);
 	zip.putString(name);
 	zip.putInt(blocks);
+	zip.putFloat(volume);
+	zip.putFloat(weight);
 	// save component flags
 	zip.putInt(attacker != NULL);
 	zip.putInt(destructible != NULL);
 	zip.putInt(ai != NULL);
 	zip.putInt(pickable != NULL);
 	zip.putInt(container != NULL);
+	zip.putInt(stomach != NULL);
 	// save components themselves
 	if ( attacker ) attacker->save(zip);
 	if ( destructible ) destructible->save(zip);
 	if ( ai ) ai->save(zip);
 	if ( pickable ) pickable->save(zip);
 	if ( container ) container->save(zip);
+	if ( stomach ) stomach->save(zip);
 }
 
 void Actor::load(TCODZip& zip) {
@@ -205,12 +209,15 @@ void Actor::load(TCODZip& zip) {
 	col=zip.getColor();
 	strcpy( this->name, zip.getString() );
 	blocks=zip.getInt();
+	volume=zip.getFloat();
+	weight=zip.getFloat();
 	// load component flags
 	bool hasAttacker=zip.getInt();
 	bool hasDestructible=zip.getInt();
 	bool hasAi=zip.getInt();
 	bool hasPickable=zip.getInt();
 	bool hasContainer=zip.getInt();
+	bool hasStomach=zip.getInt();
 	// load components
 	if ( hasAttacker ) {
 		attacker = new Attacker(0.0f);
@@ -230,6 +237,10 @@ void Actor::load(TCODZip& zip) {
 		container = new Container(0);
 		container->load(zip);
 	}
+	if ( hasStomach ) {
+		stomach = new Stomach(0,0,0);
+		stomach->load(zip);
+	}
 }
 
 void Attacker::save(TCODZip& zip) {
@@ -242,6 +253,7 @@ void Attacker::load(TCODZip& zip) {
 
 void Container::save(TCODZip& zip) {
 	zip.putInt(size);
+	zip.putFloat(maxVolume);
 	zip.putInt(inventory.size());
 	for (Actor** it=inventory.begin(); it!=inventory.end(); it++) {
 		(*it)->save(zip);
@@ -250,6 +262,7 @@ void Container::save(TCODZip& zip) {
 
 void Container::load(TCODZip& zip) {
 	size = zip.getInt();
+	maxVolume = zip.getFloat();
 	int nbActors = zip.getInt();
 	while ( nbActors > 0 ) {
 		Actor* actor = new Actor(0,0,0,"",TCODColor::white);
@@ -257,6 +270,20 @@ void Container::load(TCODZip& zip) {
 		inventory.push(actor);
 		nbActors--;
 	}
+}
+
+void Stomach::save(TCODZip& zip) {
+	Container::save(zip);
+	zip.putFloat( nutrition );
+	zip.putFloat( maxNutrition );
+	zip.putFloat( need );
+}
+
+void Stomach::load(TCODZip& zip) {
+	Container::load(zip);
+	nutrition = zip.getFloat();
+	maxNutrition = zip.getFloat();
+	need = zip.getFloat();
 }
 
 void Destructible::save(TCODZip& zip) {

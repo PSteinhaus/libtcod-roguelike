@@ -12,12 +12,16 @@ public:
 	Ai* ai;			// something self-updating
 	Pickable* pickable; // something that can be picked up and used
 	Container* container; // something that can contain actors
+	Stomach* stomach; // a container that can contain actors to be digested
+	float volume;
+	float weight;
 
-	Actor(int x, int y, int ch, const char* name, const TCODColor& col);
+	Actor(int x, int y, int ch, const char* name, const TCODColor& col, float volume = 0, float weight = 0);
 	virtual ~Actor();
 	void update();
 	void render() const;
 	float getDistance(int cx, int cy) const;
+	float getVolume();
 	void load(TCODZip& zip);
 	void save(TCODZip& zip);
 };
