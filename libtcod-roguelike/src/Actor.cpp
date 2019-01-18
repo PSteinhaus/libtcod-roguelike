@@ -13,6 +13,7 @@ Actor::~Actor() {
 	if ( ai ) delete ai;
 	if ( pickable ) delete pickable;
 	if ( container ) delete container;
+	if ( stomach ) delete stomach;
 }
 
 void Actor::update() {

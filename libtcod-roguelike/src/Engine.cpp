@@ -12,7 +12,8 @@ void Engine::init() {
 	player->destructible = new PlayerDestructible(30,2,"your cadaver");
 	player->attacker = new Attacker(5);
 	player->ai = new PlayerAi();
-	player->container = new Container(26);
+	player->container = new Container(26,8);
+	player->stomach = new Stomach(4000,2,80,0,6,4000);
 	actors.push(player);
 	// stairs
 	stairs = new Actor(0,0,'>',"stairs",TCODColor::white);
@@ -48,10 +49,12 @@ void Engine::update() {
 	}
 	player->update();
 	if ( gameStatus == NEW_TURN ) {
+		player->stomach->digest(player);
 		for (Actor** iterator=actors.begin(); iterator != actors.end(); iterator++) {
 			Actor* actor=*iterator;
 			if ( actor != player ) {
 				actor->update();
+				if ( actor->stomach ) actor->stomach->digest(actor);
 			}
 		}
 	}

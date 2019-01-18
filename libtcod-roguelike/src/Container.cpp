@@ -60,11 +60,14 @@ void Stomach::digest(Actor* owner) {
 		}
 	}
 	if (owner->destructible) {
-		// heal the owner of this stomach a little
-		owner->destructible->heal( need/10 );
 		// starvation
-		if (nutrition <= 0)
+		if (nutrition <= maxNutrition/10) {
 			owner->destructible->takeDamage(owner, 1, true);
+			if ( owner == engine.player ) engine.gui->message(TCODColor::desaturatedRed,"You're starving.");
+		} else if ( nutrition > maxNutrition/4 ) {
+			// heal the owner of this stomach a little
+			owner->destructible->heal( need/100 );
+		}
 	}
 	// hunger
 	nutrition -= need;

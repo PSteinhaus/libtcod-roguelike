@@ -60,7 +60,7 @@ void Gui::renderBar(int x, int y, int width, const char* name, float value,
 	// print text on top of the bar
 	con->setDefaultForeground(TCODColor::white);
 	con->setAlignment(TCOD_CENTER);
-	con->printf(x+width/2,y, "%s : %g/%g",name,value,maxValue);
+	con->printf(x+width/2,y, "%s : %.1f/%.1f",name,value,maxValue);
 	con->setAlignment(TCOD_LEFT);
 }
 

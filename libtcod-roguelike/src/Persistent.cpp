@@ -334,12 +334,15 @@ Destructible* Destructible::create(TCODZip& zip) {
 }
 
 void Pickable::save(TCODZip& zip) {
-	useable->save(zip);
+	zip.putInt( !!useable );
+	if ( useable ) useable->save(zip);
 }
 
 void Pickable::load(TCODZip& zip) {
-	useable = new Useable(NULL,NULL);
-	useable->load(zip);
+	if ( zip.getInt() ) {
+		useable = new Useable(NULL,NULL);
+		useable->load(zip);
+	}
 }
 
 void Useable::save(TCODZip& zip) {

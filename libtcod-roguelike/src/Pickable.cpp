@@ -30,10 +30,27 @@ void Pickable::drop(Actor* owner, Actor* carrier) {
 		owner->x = carrier->x;
 		owner->y = carrier->y;
 		if (carrier == engine.player) engine.gui->message(TCODColor::lightGrey,
-			"You drop a %s.", owner->name);
+			"You drop the %s.", owner->name);
 		else engine.gui->message(TCODColor::lightGrey,"%s drops a %s.",
 			carrier->name,owner->name);
 	}
+}
+
+bool Pickable::eat(Actor* owner, Actor* eater) {
+	if ( eater->stomach->add(owner) ) {
+		if ( eater->container ) {
+			eater->container->remove(owner);
+		}
+		if (eater == engine.player) engine.gui->message(TCODColor::lightGrey,
+			"You eat the %s.", owner->name);
+		else engine.gui->message(TCODColor::lightGrey,"%s eats a %s.",
+			eater->name,owner->name);
+		return true;
+	}
+	// you cannot eat the item
+	else if (eater == engine.player) engine.gui->message(TCODColor::lightGrey,
+		"Eating the %s would be too much for you.", owner->name);
+	return false;
 }
 
 Useable::Useable(TargetSelector *selector, Effect *effect) : selector(selector), effect(effect) {

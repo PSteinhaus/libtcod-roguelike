@@ -91,6 +91,15 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 			}
 		}
 		break;
+		case 'e' : // eat item
+		{
+			Actor* actor = choseFromInventory(owner);
+			if ( actor ) {
+				actor->pickable->eat(actor,owner);
+				engine.gameStatus = Engine::NEW_TURN;
+			}
+		}
+		break;
 		case '<' :
 			if ( engine.lastKey.shift ) {
 				if ( engine.stairs->x == owner->x && engine.stairs->y == owner->y ) {

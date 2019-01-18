@@ -21,6 +21,7 @@ void Destructible::die(Actor* owner) {
 	owner->col = TCODColor::darkRed;
 	strcpy(owner->name, corpseName);
 	owner->blocks = false;
+	if ( !owner->pickable ) owner->pickable = new Pickable(); // so that the corpse can be picked up
 	// make sure the corpses are drawn before living actors
 	engine.sendToBack(owner);
 }

@@ -94,9 +94,9 @@ void Map::addMonster(int x, int y) {
 		engine.actors.push(orc);
 		*/
 		// create a rat
-		Actor *rat = new Actor(x,y,'r',"rat", TCODColor::grey);
+		Actor *rat = new Actor(x,y,'r',"rat", TCODColor::grey, 3,1000,500);
 		rat->destructible = new MonsterDestructible(7,0,"rat corpse");
-		rat->attacker = new Attacker(4);
+		rat->attacker = new Attacker(3);
 		rat->ai = new MonsterAi();
 		engine.actors.push(rat);
 	} else {
