@@ -27,8 +27,13 @@ public:
 protected:
 	Tile* tiles;
 	TCODMap* map;
+	enum BiomeType {
+		TUTORIAL, CAVE
+	} biome;
 	friend class BspListener;
 
 	void dig(int x1, int y1, int x2, int y2);
-	void createRoom(int x1, int y1, int x2, int y2, bool first);
+	void connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, int randomness, int thickness );
+	void fillRoom(int x1, int y1, int x2, int y2, bool first);
+	void randomFreeField(int x0, int y0, int width, int height ,int* x, int* y);
 };

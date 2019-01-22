@@ -1,7 +1,7 @@
 class Effect : public Persistent
 {
 public :
-	virtual bool applyTo(Actor *actor) = 0;
+	virtual void applyTo(Actor *actor) = 0;
 	virtual ~Effect() {};
 	static Effect* create(TCODZip& zip);
 protected:
@@ -16,7 +16,7 @@ public :
 	const char *message;
 
 	HealthEffect(float amount, const char *message);
-	bool applyTo(Actor *actor);
+	void applyTo(Actor *actor);
 	void save(TCODZip& zip);
 	void load(TCODZip& zip);
 };
@@ -27,7 +27,7 @@ public :
 	const char *message;
 
 	ConfusionEffect(int nbTurns, const char *message);
-	bool applyTo(Actor *actor);
+	void applyTo(Actor *actor);
 	void save(TCODZip& zip);
 	void load(TCODZip& zip);
 };

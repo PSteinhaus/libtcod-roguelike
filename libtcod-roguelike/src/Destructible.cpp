@@ -5,14 +5,17 @@ Destructible::Destructible(float maxHp, float defense, const char* corpseName ) 
 	strcpy(this->corpseName, corpseName);
 }
 
-float Destructible::takeDamage(Actor* owner, float damage, bool directly) {
-	if(!directly) damage -= defense;
+float Destructible::calcDamage(float damage) {
+	damage -= defense;
+	if ( damage < 0 ) damage = 0;
+	return damage;
+}
+
+void Destructible::takeDamage(Actor* owner, float damage) {
 	if ( damage > 0 ) {
 		hp -= damage;
 		if ( hp <= 0 ) die(owner);
-	} else damage = 0;
-
-	return damage;
+	}
 }
 
 void Destructible::die(Actor* owner) {

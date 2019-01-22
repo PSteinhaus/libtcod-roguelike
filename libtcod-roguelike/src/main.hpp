@@ -13,6 +13,7 @@ class Actor;
 #include "Pickable.hpp"
 #include "Container.hpp"
 #include "Actor.hpp"
+#include "ActorRepository.hpp"
 #include "Map.hpp"
 #include "Gui.hpp"
 #include "Engine.hpp"

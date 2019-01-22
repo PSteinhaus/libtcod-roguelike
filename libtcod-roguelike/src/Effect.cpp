@@ -3,36 +3,32 @@
 HealthEffect::HealthEffect(float amount, const char *message) : amount(amount), message(message) {
 }
 
-bool HealthEffect::applyTo(Actor *actor) {
-	if (!actor->destructible) return false;
+void HealthEffect::applyTo(Actor *actor) {
+	if (!actor->destructible) return;
 	if ( amount > 0 ) {
 		float pointsHealed=actor->destructible->heal(amount);
 		if (pointsHealed > 0) {
 			if ( message ) {
 				engine.gui->message(TCODColor::lightGrey,message,actor->name,pointsHealed);
 			}
-			return true;
 		}
 	} else {
-		if ( message && -amount-actor->destructible->defense > 0 ) {
-			engine.gui->message(TCODColor::lightGrey,message,actor->name,-amount-actor->destructible->defense);
+		float damage = actor->destructible->calcDamage(-amount);
+		if ( message && damage > 0 ) {
+			engine.gui->message(TCODColor::lightGrey,message,actor->name,damage);
 		}
-		if ( actor->destructible->takeDamage(actor,-amount) > 0 ) {
-			return true;
-		}
+		actor->destructible->takeDamage(actor,damage);
 	}
-	return false;
 }
 
 ConfusionEffect::ConfusionEffect(int nbTurns, const char *message) : nbTurns(nbTurns), message(message) {
 }
 
-bool ConfusionEffect::applyTo(Actor* actor) {
-	if (!actor || !actor->ai ) return false;
+void ConfusionEffect::applyTo(Actor* actor) {
+	if (!actor || !actor->ai ) return;
 
 	// confuse the monster for <nbTurns> turns
 	Ai* confusedAi = new ConfusedMonsterAi( nbTurns, actor->ai );
 	actor->ai = confusedAi;
 	if (message) engine.gui->message(TCODColor::lightGreen, message, actor->name);
-	return true;
 }

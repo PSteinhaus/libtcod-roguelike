@@ -1,7 +1,7 @@
 #include "main.hpp"
 
 Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gameStatus(STARTUP), fovRadius(10),
-	screenWidth(screenWidth), screenHeight(screenHeight), level(1)
+	screenWidth(screenWidth), screenHeight(screenHeight), depth(1),x(0),y(0)
 {
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
 	TCODConsole::initRoot(screenWidth, screenHeight, "witchRogue prototype", false, TCOD_RENDERER_SDL);
@@ -15,11 +15,6 @@ void Engine::init() {
 	player->container = new Container(26,8);
 	player->stomach = new Stomach(4000,2,80,0,6,4000);
 	actors.push(player);
-	// stairs
-	stairs = new Actor(0,0,'>',"stairs",TCODColor::white);
-	stairs->blocks = false;
-	stairs->fovOnly = false;
-	actors.push(stairs);
 	map = new Map(80,43);
 	map->init();
 	gui->message(TCODColor::red,
@@ -168,12 +163,12 @@ Actor* Engine::getActor(int x, int y, bool aliveRequired) const {
 }
 
 void Engine::nextLevel() {
-	level++;
+	depth++;
 	gui->message(TCODColor::red,"You descend\ndeeper into the heart of the dungeon...");
 	delete map;
 	// delete all actors but player and stairs
 	for (Actor **it=actors.begin(); it!=actors.end(); it++) {
-		if ( *it != player && *it != stairs ) {
+		if ( *it != player ) {
 			delete *it;
 			it = actors.remove(it);
 		}

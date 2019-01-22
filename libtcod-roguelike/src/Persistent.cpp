@@ -48,16 +48,18 @@ void Engine::save() {
 		TCODZip zip;
 		// save the player first
 		player->save(zip);
+		// then some engine data
+		zip.putInt(x);
+		zip.putInt(y);
+		zip.putInt(depth);
 		// then the map
 		zip.putInt(map->width);
 		zip.putInt(map->height);
 		map->save(zip);
-		// then the stairs
-		stairs->save(zip);
 		// then all the other actors
-		zip.putInt(actors.size()-2);
+		zip.putInt(actors.size()-1);
 		for (Actor** it=actors.begin(); it!=actors.end(); it++) {
-			if ( *it != player && *it != stairs ) {
+			if ( *it != player ) {
 				(*it)->save(zip);
 			}
 		}
@@ -92,15 +94,15 @@ void Engine::load() {
 		player = new Actor(0,0,0,"",TCODColor::white);
 		player->load(zip);
 		actors.push(player);
+		// then some engine data
+		x = zip.getInt();
+		y = zip.getInt();
+		depth = zip.getInt();
 		// then the map
 		int width = zip.getInt();
 		int height = zip.getInt();
 		map = new Map(width,height);
 		map->load(zip);
-		// then the stairs
-		stairs=new Actor(0,0,0,"",TCODColor::white);
-		stairs->load(zip);
-		actors.push(stairs); 
 		// then all the other actors
 		int nbActors = zip.getInt();
 		while ( nbActors > 0 ) {
@@ -138,7 +140,10 @@ void Gui::load(TCODZip& zip) {
 }
 
 void Map::save(TCODZip& zip) {
-	bitArray = BitArray();
+	// save context data
+	zip.putInt( (int)biome );
+
+	bitArray = BitArray();	
 	// iterate over the whole map and save every tile
 	for (int i = 0; i < width*height; i++) {
 		tiles[i].save(zip);
@@ -154,6 +159,9 @@ void Map::save(TCODZip& zip) {
 }
 
 void Map::load(TCODZip& zip) {
+	// load context data
+	biome = (BiomeType)zip.getInt();
+
 	// load the first bit array
 	bitArray = BitArray(&zip);
 	// iterate over the whole map and load every tile

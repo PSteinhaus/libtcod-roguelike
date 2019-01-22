@@ -102,17 +102,21 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 		break;
 		case '<' :
 			if ( engine.lastKey.shift ) {
-				if ( engine.stairs->x == owner->x && engine.stairs->y == owner->y ) {
-					engine.nextLevel();
-				} else {
-					engine.gui->message(TCODColor::lightGrey,"There are no downstairs here.");
+				for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
+					if ( (*it)->ch == '>' && (*it)->x == owner->x && (*it)->y == owner->y ) {
+						engine.nextLevel();
+						return;
+					}
 				}
+				engine.gui->message(TCODColor::lightGrey,"There are no downstairs here.");
 			} else {
-				if ( engine.stairs->x == owner->x && engine.stairs->y == owner->y ) {
-					//engine.nextLevel();
-				} else {
-					engine.gui->message(TCODColor::lightGrey,"There are no upstairs here.");
+				for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
+					if ( (*it)->ch == '<' && (*it)->x == owner->x && (*it)->y == owner->y ) {
+						//engine.nextLevel();
+						return;
+					}
 				}
+				engine.gui->message(TCODColor::lightGrey,"There are no upstairs here.");
 			}
 		break;
 	}

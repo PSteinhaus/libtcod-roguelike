@@ -71,8 +71,8 @@ bool Useable::use(Actor* owner, Actor* user) {
 	
 	bool succeed=false;
 	for (Actor **it=list.begin(); it!=list.end(); it++) {
-		if ( effect->applyTo(*it) )
-			succeed=true;
+		effect->applyTo(*it);
+		succeed=true;
 	}
 	if ( succeed && user->container ) {
 		user->container->remove(owner);

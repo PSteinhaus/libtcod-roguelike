@@ -3,7 +3,6 @@ class Engine
 public :
 	TCODList<Actor*> actors;
 	Actor* player;
-	Actor* stairs;
 	Map* map;
 	TCOD_key_t lastKey;
 	enum GameStatus {
@@ -16,8 +15,10 @@ public :
 	int fovRadius;
 	int screenWidth;
 	int screenHeight;
-	int level;
+	int depth;
 	Gui* gui;
+	int x;
+	int y;
 
 	Engine(int screenWidth, int screenHeight);
 	~Engine();

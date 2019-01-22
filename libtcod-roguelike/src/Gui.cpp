@@ -30,7 +30,7 @@ void Gui::render() {
 	con->clear();
 	// dungeon level
 	con->setDefaultForeground(TCODColor::white);
-	con->printf(3,3,"DEPTH: %d",engine.level);
+	con->printf(3,3,"DEPTH: %d",engine.depth);
 	// draw the health bar
 	renderBar(1,1,BAR_WIDTH,"HP",engine.player->destructible->hp,
 		engine.player->destructible->maxHp, TCODColor::lightRed, TCODColor::darkerRed);

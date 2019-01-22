@@ -13,9 +13,9 @@ public:
 	Pickable* pickable; // something that can be picked up and used
 	Container* container; // something that can contain actors
 	Stomach* stomach; // a container that can contain actors to be digested
-	float volume;
-	float weight;
-	float nutrition; // how much nutrition an actor with a stomach could get out of this actor
+	float volume;	// 1 = 250ml
+	float weight;	// 1 = 1g
+	float nutrition; // how much nutrition an actor with a stomach could get out of this actor ( 1 = 1kcal )
 
 	Actor(int x, int y, int ch, const char* name, const TCODColor& col, float volume = 0, float weight = 0, float nutrition = 0);
 	virtual ~Actor();

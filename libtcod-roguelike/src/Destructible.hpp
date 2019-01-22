@@ -8,7 +8,8 @@ public:
 	Destructible(float maxHp, float defense, const char* corpseName );
 	virtual ~Destructible() {};
 	inline bool isDead() { return hp <= 0; }
-	float takeDamage(Actor* owner, float damage, bool directly=false);
+	float calcDamage(float damage);
+	void takeDamage(Actor* owner, float damage);
 	virtual void die(Actor* owner);
 	float heal(float amount);
 	void save(TCODZip& zip);
