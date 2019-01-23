@@ -16,6 +16,7 @@ public:
 	bool isInFov(int x, int y) const;
 	bool isExplored(int x, int y) const;
 	void computeFov();
+	bool inMap(int x, int y) const;
 	bool isWall(int x, int y) const;
 	bool canWalk(int x, int y) const;
 	void render() const;
@@ -33,7 +34,7 @@ protected:
 	friend class BspListener;
 
 	void dig(int x1, int y1, int x2, int y2);
-	void connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, int randomness, int thickness );
+	bool connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, int randomness, int thickness );
 	void fillRoom(int x1, int y1, int x2, int y2, bool first);
-	void randomFreeField(int x0, int y0, int width, int height ,int* x, int* y);
+	bool randomFreeField(int x0, int y0, int width, int height ,int* x, int* y, bool wall=false);
 };

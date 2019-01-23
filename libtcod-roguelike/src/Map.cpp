@@ -1,4 +1,6 @@
 #include "main.hpp"
+#include <math.h>
+#include <stdio.h>
 
 static const int ROOM_MAX_SIZE = 12;
 static const int ROOM_MIN_SIZE = 6;
@@ -31,13 +33,13 @@ public:
 					int y = node->y+(node->h/2);
 					int xStep, yStep;
 					TCODRandom* rng = TCODRandom::getInstance();
-					for(float i=0; i<(node->w*node->h*dig_rnd_mod); i++) {
+					for(float i=0; i<( pow(node->w*node->h,2)*dig_rnd_mod/1000 ); i++) {
 						map.map->setProperties(x,y,true,true);
 						if ( rng->getInt(1,100) > dig_rnd_centricity ) { // make sure not to stray too far from the center
 							do {
 								xStep = rng->getInt(-1,1);
 								yStep = rng->getInt(-1,1);
-							} while ( x+xStep==0 || x+xStep==map.width-1 || y+yStep==0 || y+yStep==map.height-1 );
+							} while ( !map.inMap(x+xStep,y+yStep) );
 							x += xStep;
 							y += yStep;
 						} else {
@@ -55,16 +57,20 @@ public:
 				TCODBsp* sibling = node->getLeft();
 				if ( sibling != NULL ) {
 					TCODPath* path = static_cast<TCODPath*>(userData);
-					int thickness = 1;
-					if ( !node->isLeaf() ) { // node and sibling are parents; replace each with one of their (already interconnected) children
+					int thickness = 2;
+					if ( !node->isLeaf() ) { // node and (maybe) sibling are parents; replace each with one of their (already interconnected) children
+						//if ( !sibling->isLeaf() ) thickness = 2;
+						int x1 = node->x+node->w-1; int y1 = node->y+node->h-1;
+						int x2 = sibling->x+sibling->w-1; int y2 = node->y+node->h-1;
 						node = node->findNode(node->x+node->w-1,node->y+node->h-1);
 						sibling = sibling->findNode(sibling->x+sibling->w-1,sibling->y+sibling->h-1);
+						if ( node==sibling ) printf("Node at %d,%d is node at %d,%d.\n", x1,y1, x2,y2 );
 					}
 					while ( !path->compute(node->x+(node->w/2),node->y+(node->h/2),
-										sibling->x+(sibling->w/2),sibling->y+(sibling->h/2)) ) {
+										sibling->x+(sibling->w/2),sibling->y+(sibling->h/2) )  ) {
 						// no connection found, so establish one
-						map.connectRoomsRandom(node->x,node->y,node->w,node->h,
-											sibling->x,sibling->y,sibling->w,sibling->h, 40, thickness);
+						map.connectRoomsRandom(node->x+(node->w/2),node->y+(node->h/2),1,1,
+											sibling->x+(sibling->w/2),sibling->y+(sibling->h/2),1,1, 40, thickness);
 					}
 				}
 			}
@@ -112,30 +118,25 @@ void Map::addItem(int x, int y) {
 
 void Map::fillRoom(int x1, int y1, int x2, int y2, bool first=false) {
 	TCODRandom* rng = TCODRandom::getInstance();
+	int x,y;
 	if ( first ) {
 		// put the player in the first room
 		engine.player->x = (x1+x2)/2;
 		engine.player->y = (y1+y2)/2;
 	} else {
 		int nbMonsters = rng->getInt(0,MAX_ROOM_MONSTERS);
-		while ( nbMonsters > 0 ) { 
-			int x = rng->getInt(x1,x2);
-			int y = rng->getInt(y1,y2);
-			if ( canWalk(x,y) ) {
+		while ( nbMonsters > 0 ) {
+			if ( randomFreeField(x1,y1,abs(x1-x2)+1,abs(y1-y2)+1, &x,&y) )
 				addMonster(x,y);
-				nbMonsters--;
-			}
+			nbMonsters--;
 		}
 	}
 	// add items
 	int nbItems=rng->getInt(0,MAX_ROOM_ITEMS);
 	while (nbItems > 0) {
-		int x=rng->getInt(x1,x2);
-		int y=rng->getInt(y1,y2);
-		if ( canWalk(x,y) ) {
+		if ( randomFreeField(x1,y1,abs(x1-x2)+1,abs(y1-y2)+1, &x,&y) )
 			addItem(x,y);
-			nbItems--;
-		}
+		nbItems--;
 	}
 	if ( !dStairs ) {
 		// create stairs
@@ -168,10 +169,10 @@ void Map::init() {
 		case CAVE:
 		{
 			TCODBsp bsp(0,0,width,height);
-			bsp.splitRecursive(NULL,5,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
+			bsp.splitRecursive(NULL,4,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
 			BspListener listener(*this);
 			listener.state = BspListener::DIG_RND;
-			listener.dig_rnd_mod = 0.8;
+			listener.dig_rnd_mod = 0.4;
 			bsp.traverseInvertedLevelOrder(&listener,NULL);
 			listener.state = BspListener::CONNECT_RND;
 			TCODPath path = TCODPath(map);
@@ -193,6 +194,10 @@ void Map::init() {
 
 bool Map::isWall(int x, int y) const {
 	return !map->isWalkable(x,y);
+}
+
+bool Map::inMap(int x, int y) const {
+	return ( x!=0 && x!=width-1 && y!=0 && y!=height-1 );
 }
 
 bool Map::canWalk(int x, int y) const {
@@ -243,23 +248,35 @@ void Map::dig(int x1, int y1, int x2, int y2) {
 	}
 }
 
-void Map::randomFreeField(int x0, int y0, int width0, int height0 ,int* x, int* y) {
+
+bool Map::randomFreeField(int x0, int y0, int width0, int height0 ,int* x, int* y, bool wall ) {
 	TCODRandom* rng = TCODRandom::getInstance();
+	int tries = 0;
 	do {
 		*x = rng->getInt( x0, x0+width0-1 );
 		*y = rng->getInt( y0, y0+height0-1 );
-	} while ( !canWalk(*x,*y) );
+		tries++;
+	} while ( !( (!wall && canWalk(*x,*y)) || (wall && map->isWalkable(*x,*y)) ) && tries < width0*height0*width0*height0 );
+	if ( !( (!wall && canWalk(*x,*y)) || (wall && map->isWalkable(*x,*y)) ) ) { // simply go through all fields and take the first free one
+		for(int i=0; i<width0; i++)
+			for(int j=0; j<height0; j++) {
+				*x = i;
+				*y = j;
+				if ( (!wall && canWalk(*x,*y)) || (wall && map->isWalkable(*x,*y)) ) break;
+			}
+	}
+	return ( (!wall && canWalk(*x,*y)) || (wall && map->isWalkable(*x,*y)) );
 }
 
-void Map::connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, int randomness, int thickness) {
+bool Map::connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, int randomness, int thickness) {
 	TCODRandom* rng = TCODRandom::getInstance();
 	int xStart; int yStart;
-	randomFreeField(x1,y1, width1,height1, &xStart,&yStart);
+	if ( !randomFreeField(x1,y1, width1,height1, &xStart,&yStart, true) ) return false;
 	int xEnd; int yEnd;
-	randomFreeField(x2,y2, width2,height2, &xEnd,&yEnd);
+	if ( !randomFreeField(x2,y2, width2,height2, &xEnd,&yEnd, true) ) return false;
 
 	int x=xStart; int y=yStart;
-	while ( x!=xEnd && y!=yEnd ) {
+	while ( x!=xEnd || y!=yEnd ) {
 		if ( rng->getInt(1,100) > randomness ) {
 			// follow a straight path to your destination
 			TCODLine::init (x,y, xEnd,yEnd);
@@ -270,21 +287,17 @@ void Map::connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, in
 			do {
 			xStep = rng->getInt(-1,1);
 			yStep = rng->getInt(-1,1);
-			} while ( x+xStep==0 || x+xStep==width-1 || y+yStep==0 || y+yStep==height-1 );
+			} while ( !inMap(x+xStep,y+yStep) );
 			x += xStep;
 			y += yStep;
 		}
-		//map->setProperties(x,y,true,true);
-		
-		// adjust for tunnel thickness
-		//x -= thickness-1/2;
-		//y -= thickness-1/2;
-		for (int i=0; i < thickness; i++)
+		for (int i=0; i < thickness-1 || i==0; i++)
 			for (int j=0; j < thickness; j++) {
-				map->setProperties(x+i,y+j,true,true);
+				if ( inMap(x+i,y+j) ) map->setProperties(x+i,y+j,true,true);
 			}
 		
 	}
+	return true;
 }
 
 void Map::render() const {
@@ -297,10 +310,10 @@ void Map::render() const {
 
 	for (int x = 0; x < width; ++x) {
 		for (int y = 0; y < height; ++y) {
-			if ( isExplored(x,y) ) {
+			//if ( isExplored(x,y) ) {
 			TCODConsole::root->setCharForeground(x, y, TCODColor::darkerGrey );
 			TCODConsole::root->setChar(x,y, isWall(x,y) ? '#' : '.');
-			}
+			//}
 			if ( isInFov(x,y) ) TCODConsole::root->setCharForeground(x, y, TCODColor::white );
 		}
 	}
