@@ -3,8 +3,9 @@
 Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gameStatus(STARTUP), fovRadius(10),
 	screenWidth(screenWidth), screenHeight(screenHeight), depth(1),x(0),y(0)
 {
+	TCODSystem::setFps(60);
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
-	TCODConsole::initRoot(screenWidth, screenHeight, "witchRogue prototype", false, TCOD_RENDERER_SDL);
+	TCODConsole::initRoot(screenWidth, screenHeight, "witchRogue prototype", false, TCOD_RENDERER_GLSL);
 	gui = new Gui();
 }
 void Engine::init() {
