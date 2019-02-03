@@ -1,12 +1,16 @@
 #include "main.hpp"
 
 Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gameStatus(STARTUP), fovRadius(10),
-	screenWidth(screenWidth), screenHeight(screenHeight), depth(1),x(0),y(0)
+	screenWidth(screenWidth), screenHeight(screenHeight), depth(1),x(worldSize/2),y(worldSize/2)
 {
 	TCODSystem::setFps(60);
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
 	TCODConsole::initRoot(screenWidth, screenHeight, "witchRogue prototype", false, TCOD_RENDERER_GLSL);
 	gui = new Gui();
+	for(int i=0; i<worldSize; i++)
+		for(int j=0; j<worldSize; j++)
+			for(int k=0; k<worldDepth; k++)
+				world[i][j][k] = (k==0) ? new Chunk(Chunk::PLAINS) : new Chunk(Chunk::CAVE);
 }
 void Engine::init() {
 	player = new Actor(40,25,'@',"player",TCODColor::white);
@@ -32,6 +36,10 @@ void Engine::terminate() {
 Engine::~Engine() {
 	terminate();
 	delete gui;
+	for(int i=0; i<worldSize; i++)
+		for(int j=0; j<worldSize; j++)
+			for(int k=0; k<worldDepth; k++)
+				delete world[i][j][k];
 }
 
 void Engine::update() {
@@ -40,8 +48,7 @@ void Engine::update() {
 
 	TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS, &lastKey, NULL);
 	if (lastKey.vk == TCODK_ESCAPE) {
-		save();
-		load();
+		gameMenu();
 	}
 	player->update();
 	if ( gameStatus == NEW_TURN ) {
@@ -178,4 +185,25 @@ void Engine::nextLevel() {
 	map = new Map(80,43);
 	map->init();
 	gameStatus = STARTUP;
+}
+
+void Engine::gameMenu() {
+	gui->menu.clear();
+	gui->menu.addItem(Menu::NEW_GAME,"New game");
+	if ( TCODSystem::fileExists("game.sav")) {
+		gui->menu.addItem(Menu::CONTINUE,"Continue");
+	}
+	gui->menu.addItem(Menu::EXIT,"Exit");
+
+	Menu::MenuItemCode menuItem=engine.gui->menu.pick();
+	if ( menuItem == Menu::EXIT || menuItem == Menu::NONE ) {
+		// Exit or window closed
+		gameStatus = EXIT;
+	} else if ( menuItem == Menu::NEW_GAME ) {
+		// New game
+		terminate();
+		init();
+	} else if ( !map ) {
+		load();
+	}
 }

@@ -10,15 +10,19 @@ public :
 		IDLE,
 		NEW_TURN,
 		VICTORY,
-		DEFEAT
+		DEFEAT,
+		EXIT
 	} gameStatus;
 	int fovRadius;
 	int screenWidth;
 	int screenHeight;
+	static const int worldSize = 100;
+	static const int worldDepth = 10;
 	int depth;
 	Gui* gui;
 	int x;
 	int y;
+	Chunk* world[worldSize][worldSize][worldDepth];
 
 	Engine(int screenWidth, int screenHeight);
 	~Engine();
@@ -32,7 +36,9 @@ public :
 	void terminate();
 	void load();
 	void save();
+	void gameMenu();
 	Actor* getActor(int x, int y, bool aliveRequired = true) const;
+	inline Chunk* currentChunk() { return world[x][y][depth]; }
 };
 
 extern Engine engine;

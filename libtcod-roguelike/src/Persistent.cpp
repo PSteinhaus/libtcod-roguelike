@@ -8,6 +8,7 @@
 #endif
 
 #include "main.hpp"
+#include <map>
 
 // it's not yet sure whether using BitArrays will have any advantage because of the final compression
 static BitArray bitArray;
@@ -63,59 +64,52 @@ void Engine::save() {
 				(*it)->save(zip);
 			}
 		}
-		// finally the message log
+		// save the message log
 		gui->save(zip);
+		// and finally SAVE THE WORLD!
+		for(int i=0; i<worldSize; i++)
+			for(int j=0; j<worldSize; j++)
+				for(int k=0; k<worldDepth; k++)
+					world[i][j][k]->save(zip);
 		zip.saveToFile("game.sav");
 	}
 }
 
 void Engine::load() {
-	engine.gui->menu.clear();
-	engine.gui->menu.addItem(Menu::NEW_GAME,"New game");
-	if ( TCODSystem::fileExists("game.sav")) {
-		engine.gui->menu.addItem(Menu::CONTINUE,"Continue");
+	TCODZip zip;
+	// continue a saved game
+	terminate();
+	zip.loadFromFile("game.sav");
+	// load the player
+	player = new Actor(0,0,0,"",TCODColor::white);
+	player->load(zip);
+	actors.push(player);
+	// then some engine data
+	x = zip.getInt();
+	y = zip.getInt();
+	depth = zip.getInt();
+	// then the map
+	int width = zip.getInt();
+	int height = zip.getInt();
+	map = new Map(width,height);
+	map->load(zip);
+	// then all the other actors
+	int nbActors = zip.getInt();
+	while ( nbActors > 0 ) {
+		Actor* actor = new Actor(0,0,0,"",TCODColor::white);
+		actor->load(zip);
+		actors.push(actor);
+		nbActors--;
 	}
-	engine.gui->menu.addItem(Menu::EXIT,"Exit");
-
-	Menu::MenuItemCode menuItem=engine.gui->menu.pick();
-	if ( menuItem == Menu::EXIT || menuItem == Menu::NONE ) {
-		// Exit or window closed
-		exit(0);
-	} else if ( menuItem == Menu::NEW_GAME ) {
-		// New game
-		engine.terminate();
-		engine.init();
-	} else {
-		TCODZip zip;
-		// continue a saved game
-		engine.terminate();
-		zip.loadFromFile("game.sav");
-		// load the player
-		player = new Actor(0,0,0,"",TCODColor::white);
-		player->load(zip);
-		actors.push(player);
-		// then some engine data
-		x = zip.getInt();
-		y = zip.getInt();
-		depth = zip.getInt();
-		// then the map
-		int width = zip.getInt();
-		int height = zip.getInt();
-		map = new Map(width,height);
-		map->load(zip);
-		// then all the other actors
-		int nbActors = zip.getInt();
-		while ( nbActors > 0 ) {
-			Actor* actor = new Actor(0,0,0,"",TCODColor::white);
-			actor->load(zip);
-			actors.push(actor);
-			nbActors--;
-		}
-		// finally the message log
-		gui->load(zip);
-		// to force FOV recomputation
-		gameStatus = STARTUP;
-	}
+	// the message log
+	gui->load(zip);
+	// and finally THE WORLD!
+	for(int i=0; i<worldSize; i++)
+		for(int j=0; j<worldSize; j++)
+			for(int k=0; k<worldDepth; k++)
+				world[i][j][k]->load(zip);
+	// to force FOV recomputation
+	gameStatus = STARTUP;
 }
 
 void Gui::save(TCODZip& zip) {
@@ -139,10 +133,38 @@ void Gui::load(TCODZip& zip) {
 	}
 }
 
-void Map::save(TCODZip& zip) {
-	// save context data
-	zip.putInt( (int)biome );
+void Chunk::save(TCODZip& zip) {
+	zip.putInt( persistentMap );
+	zip.putInt( (int)broadType );
+	// terrainData
+	zip.putInt( terrainData.startWithWalls );
+	zip.putInt( (int)terrainData.roomCreation );
+	zip.putInt( (int)terrainData.tunnelCreation );
+	// biomeData
+	zip.putInt( biomeData.creatures.size() );
+	for(auto it = biomeData.creatures.cbegin(); it != biomeData.creatures.cend(); ++it) {
+		zip.putInt( (int)it->first ); // name
+		zip.putInt( it->second );	  // number of creatures of this type
+	}
+}
 
+void Chunk::load(TCODZip& zip) {
+	persistentMap = zip.getInt();
+	broadType = (BroadType)zip.getInt();
+	// terrainData
+	terrainData.startWithWalls = (bool)zip.getInt();
+	terrainData.roomCreation = (TerrainData::RoomCreation)zip.getInt();
+	terrainData.tunnelCreation = (TerrainData::TunnelCreation)zip.getInt();
+	// biomeData
+	// creature map
+	biomeData.creatures.clear();
+	int size = zip.getInt();
+	for(int i=0; i<size; ++i) {
+		biomeData.creatures.insert( std::pair<ActorRep::CreatureName,int>( (ActorRep::CreatureName)zip.getInt(),zip.getInt() ) );
+	}
+}
+
+void Map::save(TCODZip& zip) {
 	bitArray = BitArray();	
 	// iterate over the whole map and save every tile
 	for (int i = 0; i < width*height; i++) {
@@ -159,9 +181,6 @@ void Map::save(TCODZip& zip) {
 }
 
 void Map::load(TCODZip& zip) {
-	// load context data
-	biome = (BiomeType)zip.getInt();
-
 	// load the first bit array
 	bitArray = BitArray(&zip);
 	// iterate over the whole map and load every tile

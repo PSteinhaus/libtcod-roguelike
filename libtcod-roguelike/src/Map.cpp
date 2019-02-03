@@ -153,7 +153,7 @@ void Map::fillRoom(int x1, int y1, int x2, int y2, bool first=false) {
 // # UNIVERSAL MAP FUNCTIONS #
 // ###########################
 
-Map::Map(int width, int height) : width(width), height(height), biome(CAVE) {
+Map::Map(int width, int height) : width(width), height(height) {
 	tiles = new Tile[width*height];
 	map = new TCODMap(width,height);
 }
@@ -164,31 +164,53 @@ Map::~Map() {
 }
 
 void Map::init() {
+	Chunk* chunk = engine.currentChunk();
+	TCODBsp bsp(0,0,width,height);
+	BspListener listener(*this);
 	dStairs = NULL;
-	switch(biome) {
-		case CAVE:
-		{
-			TCODBsp bsp(0,0,width,height);
-			bsp.splitRecursive(NULL,4,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
-			BspListener listener(*this);
-			listener.state = BspListener::DIG_RND;
-			listener.dig_rnd_mod = 0.4;
-			bsp.traverseInvertedLevelOrder(&listener,NULL);
-			listener.state = BspListener::CONNECT_RND;
-			TCODPath path = TCODPath(map);
-			bsp.traverseInvertedLevelOrder(&listener,&path);
-			// add stairs
+	{
+		typedef Chunk::TerrainData TD;
+
+		// check whether to start with walls or fields
+		if (!chunk->terrainData.startWithWalls) map->clear(true,true);
+
+		// dig the rooms
+		switch(chunk->terrainData.roomCreation) {
+			case TD::RoomCreation::DIG_RANDOM:
+			{
+				bsp.splitRecursive(NULL,4,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
+
+				listener.state = BspListener::DIG_RND;
+				listener.dig_rnd_mod = 0.4;
+				bsp.traverseInvertedLevelOrder(&listener,NULL);
+			}
+			break;
+			case TD::RoomCreation::DIG:
+			{
+				TCODBsp bsp(0,0,width,height);
+				bsp.splitRecursive(NULL,6,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
+				BspListener listener(*this);
+				listener.state = BspListener::DEFAULT;
+				bsp.traverseInvertedLevelOrder(&listener,NULL);
+			}
+			break;
+			default:
+			break;
 		}
-		break;
-		default:
-		{
-			TCODBsp bsp(0,0,width,height);
-			bsp.splitRecursive(NULL,6,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
-			BspListener listener(*this);
-			listener.state = BspListener::DEFAULT;
-			bsp.traverseInvertedLevelOrder(&listener,NULL);
+
+		// connect them
+		switch(chunk->terrainData.tunnelCreation) {
+			case TD::TunnelCreation::RANDOM:
+			{
+				listener.state = BspListener::CONNECT_RND;
+				TCODPath path = TCODPath(map);
+				bsp.traverseInvertedLevelOrder(&listener,&path);
+				// (add stairs)
+			}
+			break;
+			default:
+			break;
 		}
-		break;
 	}
 }
 

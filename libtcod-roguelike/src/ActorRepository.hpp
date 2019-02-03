@@ -1,6 +1,10 @@
 // for simple access and documentation of items, monsters, etc.
 
 namespace ActorRep {
+	enum CreatureName {
+		RAT, ORC, TROLL
+	};
+
 	Actor* Rat(int x, int y);
 	Actor* Orc(int x, int y);
 	Actor* Troll(int x, int y);

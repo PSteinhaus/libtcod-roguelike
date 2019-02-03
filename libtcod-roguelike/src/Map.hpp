@@ -28,9 +28,6 @@ public:
 protected:
 	Tile* tiles;
 	TCODMap* map;
-	enum BiomeType {
-		TUTORIAL, CAVE
-	} biome;
 	friend class BspListener;
 
 	void dig(int x1, int y1, int x2, int y2);

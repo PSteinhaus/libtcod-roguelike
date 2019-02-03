@@ -15,5 +15,6 @@ class Actor;
 #include "Actor.hpp"
 #include "ActorRepository.hpp"
 #include "Map.hpp"
+#include "Chunk.hpp"
 #include "Gui.hpp"
 #include "Engine.hpp"
