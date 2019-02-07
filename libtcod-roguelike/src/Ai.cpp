@@ -104,7 +104,7 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 			if ( engine.lastKey.shift ) {
 				for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
 					if ( (*it)->ch == '>' && (*it)->x == owner->x && (*it)->y == owner->y ) {
-						engine.nextLevel();
+						engine.changeChunk(0,0,1);
 						return;
 					}
 				}
@@ -112,7 +112,7 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 			} else {
 				for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
 					if ( (*it)->ch == '<' && (*it)->x == owner->x && (*it)->y == owner->y ) {
-						//engine.nextLevel();
+						engine.changeChunk(0,0,-1);
 						return;
 					}
 				}

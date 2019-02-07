@@ -6,7 +6,6 @@ static const int ROOM_MAX_SIZE = 12;
 static const int ROOM_MIN_SIZE = 6;
 static const int MAX_ROOM_MONSTERS = 3;
 static const int MAX_ROOM_ITEMS = 2;
-static Actor* dStairs = NULL;
 
 // ###########################
 // # STANDARD TUTORIAL STUFF #
@@ -138,15 +137,6 @@ void Map::fillRoom(int x1, int y1, int x2, int y2, bool first=false) {
 			addItem(x,y);
 		nbItems--;
 	}
-	if ( !dStairs ) {
-		// create stairs
-		dStairs = new Actor(0,0,'>',"stairs",TCODColor::white);
-		dStairs->blocks = false;
-		dStairs->fovOnly = false;
-		engine.actors.push(dStairs);
-	}
-	dStairs->x = (x1+x2)/2;
-	dStairs->y = (y1+y2)/2;
 }
 
 // ###########################
@@ -167,7 +157,6 @@ void Map::init() {
 	Chunk* chunk = engine.currentChunk();
 	TCODBsp bsp(0,0,width,height);
 	BspListener listener(*this);
-	dStairs = NULL;
 	{
 		typedef Chunk::TerrainData TD;
 
@@ -210,6 +199,23 @@ void Map::init() {
 			break;
 			default:
 			break;
+		}
+
+		// add stairs
+		{
+			int x, y;
+			for(int i=0; i<chunk->terrainData.numDownStairs; i++) {
+				randomFreeField(0,0,width,height, &x,&y);
+				Actor* stairs = new Actor(x,y,'>',"downstairs",TCODColor::white);
+				stairs->fovOnly = false;
+				engine.actors.push( stairs );
+			}
+			for(int i=0; i<chunk->terrainData.numUpStairs; i++) {
+				randomFreeField(0,0,width,height, &x,&y);
+				Actor* stairs = new Actor(x,y,'<',"upstairs",TCODColor::white);
+				stairs->fovOnly = false;
+				engine.actors.push( stairs );
+			}
 		}
 	}
 }

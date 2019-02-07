@@ -26,7 +26,7 @@ public :
 
 	Engine(int screenWidth, int screenHeight);
 	~Engine();
-	void nextLevel();
+	void changeChunk(int dx, int dy, int dz);
 	void update();
 	void render();
 	void sendToBack(Actor* actor);

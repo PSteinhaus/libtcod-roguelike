@@ -10,7 +10,7 @@ Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gam
 	for(int i=0; i<worldSize; i++)
 		for(int j=0; j<worldSize; j++)
 			for(int k=0; k<worldDepth; k++)
-				world[i][j][k] = (k==0) ? new Chunk(Chunk::PLAINS) : new Chunk(Chunk::CAVE);
+				world[i][j][k] = (k==0) ? new Chunk(Chunk::PLAINS) : new Chunk(Chunk::CAVE,false,k);
 }
 void Engine::init() {
 	player = new Actor(40,25,'@',"player",TCODColor::white);
@@ -170,21 +170,36 @@ Actor* Engine::getActor(int x, int y, bool aliveRequired) const {
 	return NULL;
 }
 
-void Engine::nextLevel() {
-	depth++;
-	gui->message(TCODColor::red,"You descend\ndeeper into the heart of the dungeon...");
+void Engine::changeChunk(int dx, int dy, int dz) {
+	if ( dz == 1 ) {
+		depth++;
+		gui->message(TCODColor::red,"You descend\ndeeper into the heart of the dungeon...");
+	}
+	if ( dz == -1 ) {
+		depth--;
+	}
 	delete map;
-	// delete all actors but player and stairs
+	// delete all actors but the player
 	for (Actor **it=actors.begin(); it!=actors.end(); it++) {
 		if ( *it != player ) {
 			delete *it;
-			it = actors.remove(it);
+			it = actors.remove(it); // removes the object *it and returns a new iterator (the previous one)
 		}
 	}
 	// create a new map
 	map = new Map(80,43);
 	map->init();
 	gameStatus = STARTUP;
+
+	for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
+		if ( (dz == 1  && (*it)->ch == '<') ||
+			 (dz == -1 && (*it)->ch == '>') )
+		{ // try to place stairs at the players position (for logical reasons)
+			(*it)->x = player->x;
+			(*it)->y = player->y;
+			break;
+		}
+	}
 }
 
 void Engine::gameMenu() {
