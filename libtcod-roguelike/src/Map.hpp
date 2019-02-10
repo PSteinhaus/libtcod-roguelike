@@ -10,9 +10,10 @@ class Map : public Persistent
 public:
 	int width,height;
 
-	Map(int width, int height);
+	Map(int width, int height, Chunk* chunk);
 	virtual ~Map();
 	void init();
+	void leave();
 	bool isInFov(int x, int y) const;
 	bool isExplored(int x, int y) const;
 	void computeFov();
@@ -28,6 +29,7 @@ public:
 protected:
 	Tile* tiles;
 	TCODMap* map;
+	Chunk* chunk;
 	friend class BspListener;
 
 	void dig(int x1, int y1, int x2, int y2);

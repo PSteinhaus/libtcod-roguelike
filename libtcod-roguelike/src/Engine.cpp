@@ -20,7 +20,7 @@ void Engine::init() {
 	player->container = new Container(26,8);
 	player->stomach = new Stomach(4000,2,80,0,6,4000);
 	actors.push(player);
-	map = new Map(80,43);
+	map = new Map(80,43, currentChunk() );
 	map->init();
 	gui->message(TCODColor::red,
 	"Welcome stranger!\nPrepare to perish in the Tombs of the Ancient Kings.");
@@ -178,6 +178,7 @@ void Engine::changeChunk(int dx, int dy, int dz) {
 	if ( dz == -1 ) {
 		depth--;
 	}
+	map->leave();
 	delete map;
 	// delete all actors but the player
 	for (Actor **it=actors.begin(); it!=actors.end(); it++) {
@@ -187,14 +188,15 @@ void Engine::changeChunk(int dx, int dy, int dz) {
 		}
 	}
 	// create a new map
-	map = new Map(80,43);
+	map = new Map(80,43, currentChunk() );
 	map->init();
 	gameStatus = STARTUP;
 
+	// try to place stairs at the players position (for logical reasons)
 	for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
 		if ( (dz == 1  && (*it)->ch == '<') ||
 			 (dz == -1 && (*it)->ch == '>') )
-		{ // try to place stairs at the players position (for logical reasons)
+		{
 			(*it)->x = player->x;
 			(*it)->y = player->y;
 			break;

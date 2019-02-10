@@ -1,6 +1,36 @@
 #include "main.hpp"
 
-Actor* ActorRep::Rat(int x, int y) {
+
+
+Actor* ActorRep::getActor(ActorRep::Name name, int x, int y) {
+	using namespace ActorRep;
+	Actor* actor;
+	switch (name) {
+		case RAT:
+			actor = new Actor(x,y,'r',"rat", TCODColor::grey, 3,1000,500);
+			actor->destructible = new MonsterDestructible(7,0,"rat corpse");
+			actor->attacker = new Attacker(3);
+			actor->ai = new MonsterAi();
+		break;
+		case ORC:
+			actor = new Actor(x,y,'o',"orc", TCODColor::desaturatedGreen);
+			actor->destructible = new MonsterDestructible(10,0,"dead orc");
+			actor->attacker = new Attacker(3);
+			actor->ai = new MonsterAi();
+		break;
+		case TROLL:
+			actor = new Actor(x,y,'T',"troll", TCODColor::darkerGreen);
+			actor->destructible = new MonsterDestructible(16,1,"troll carcass");
+			actor->attacker = new Attacker(4);
+			actor->ai = new MonsterAi();
+		break;
+		default:;
+	}
+	actor->actorRepName = name;
+	return actor;
+}
+
+Actor* Rat(int x, int y) {
 	Actor *rat = new Actor(x,y,'r',"rat", TCODColor::grey, 3,1000,500);
 	rat->destructible = new MonsterDestructible(7,0,"rat corpse");
 	rat->attacker = new Attacker(3);
@@ -8,7 +38,7 @@ Actor* ActorRep::Rat(int x, int y) {
 	return rat;
 }
 
-Actor* ActorRep::Orc(int x, int y) {
+Actor* Orc(int x, int y) {
 	Actor *orc = new Actor(x,y,'o',"orc", TCODColor::desaturatedGreen);
 	orc->destructible = new MonsterDestructible(10,0,"dead orc");
 	orc->attacker = new Attacker(3);
@@ -16,7 +46,7 @@ Actor* ActorRep::Orc(int x, int y) {
 	return orc;
 }
 
-Actor* ActorRep::Troll(int x, int y) {
+Actor* Troll(int x, int y) {
 	Actor *troll = new Actor(x,y,'T',"troll", TCODColor::darkerGreen);
 	troll->destructible = new MonsterDestructible(16,1,"troll carcass");
 	troll->attacker = new Attacker(4);
@@ -24,7 +54,7 @@ Actor* ActorRep::Troll(int x, int y) {
 	return troll;
 }
 
-Actor* ActorRep::HealthPotion(int x, int y) {
+Actor* HealthPotion(int x, int y) {
 	Actor *item = new Actor(x,y,'!',"health potion", TCODColor::violet);
 	item->blocks = false;
 	item->pickable = new Pickable();
@@ -32,7 +62,7 @@ Actor* ActorRep::HealthPotion(int x, int y) {
 	return item;
 }
 
-Actor* ActorRep::LightningScroll(int x, int y) {
+Actor* LightningScroll(int x, int y) {
 	Actor *item = new Actor(x,y,'?',"scroll of lightning bolt", TCODColor::lightYellow);
 	item->blocks = false;
 	item->pickable = new Pickable();
@@ -42,7 +72,7 @@ Actor* ActorRep::LightningScroll(int x, int y) {
 	return item;
 }
 
-Actor* ActorRep::FireballScroll(int x, int y) {
+Actor* FireballScroll(int x, int y) {
 	Actor *item = new Actor(x,y,'?',"scroll of fireball",TCODColor::lightYellow);
 	item->blocks = false;
 	item->pickable = new Pickable();
@@ -52,7 +82,7 @@ Actor* ActorRep::FireballScroll(int x, int y) {
 	return item;
 }
 
-Actor* ActorRep::ConfusionScroll(int x, int y) {
+Actor* ConfusionScroll(int x, int y) {
 	Actor *item = new Actor(x,y,'?',"scroll of confusion",TCODColor::lightYellow);
 	item->blocks = false;
 	item->pickable = new Pickable();

@@ -91,7 +91,7 @@ void Engine::load() {
 	// then the map
 	int width = zip.getInt();
 	int height = zip.getInt();
-	map = new Map(width,height);
+	map = new Map(width,height, currentChunk() );
 	map->load(zip);
 	// then all the other actors
 	int nbActors = zip.getInt();
@@ -160,7 +160,7 @@ void Chunk::load(TCODZip& zip) {
 	biomeData.creatures.clear();
 	int size = zip.getInt();
 	for(int i=0; i<size; ++i) {
-		biomeData.creatures.insert( std::pair<ActorRep::CreatureName,int>( (ActorRep::CreatureName)zip.getInt(),zip.getInt() ) );
+		biomeData.creatures.insert( std::pair<ActorRep::Name,int>( (ActorRep::Name)zip.getInt(),zip.getInt() ) );
 	}
 }
 

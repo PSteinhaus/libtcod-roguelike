@@ -12,8 +12,9 @@ class Actor;
 #include "TargetSelector.hpp"
 #include "Pickable.hpp"
 #include "Container.hpp"
-#include "Actor.hpp"
 #include "ActorRepository.hpp"
+#include "Actor.hpp"
+class Chunk;
 #include "Map.hpp"
 #include "Chunk.hpp"
 #include "Gui.hpp"

@@ -1,6 +1,7 @@
 #include "main.hpp"
 #include <math.h>
 #include <stdio.h>
+#include <map>
 
 static const int ROOM_MAX_SIZE = 12;
 static const int ROOM_MIN_SIZE = 6;
@@ -104,9 +105,27 @@ public:
 };
 
 void Map::addMonster(int x, int y) {
-	//TCODRandom* rng = TCODRandom::getInstance();
-	// create a rat
-	engine.actors.push( ActorRep::Rat(x,y) );
+	// choose a random creature from this chunks biome
+	int biomeSize = chunk->biomeData.creatures.size();
+	if (biomeSize != 0) {
+		// check if there is any creature left at all
+		for (auto it = chunk->biomeData.creatures.begin(); it != chunk->biomeData.creatures.end(); it++)
+			if (it->second != 0) goto ok;
+		return;
+		
+		ok:
+		TCODRandom* rng = TCODRandom::getInstance();
+		auto it = chunk->biomeData.creatures.begin();
+		std::advance(it, rng->getInt( 0, biomeSize-1 ) );
+		auto name = it->first;
+		while (it->second <= 0) {
+			it = chunk->biomeData.creatures.begin();				//
+			std::advance(it, rng->getInt( 0, biomeSize-1 ) );		// choose
+			name = it->first;										//
+		}
+		it->second--;												// load OFF the biomeData
+		engine.actors.push( ActorRep::getActor(name, x,y) );		// place into the map (or engine as of now)
+	}
 }
 
 void Map::addItem(int x, int y) {
@@ -143,7 +162,7 @@ void Map::fillRoom(int x1, int y1, int x2, int y2, bool first=false) {
 // # UNIVERSAL MAP FUNCTIONS #
 // ###########################
 
-Map::Map(int width, int height) : width(width), height(height) {
+Map::Map(int width, int height, Chunk* chunk) : width(width), height(height), chunk(chunk) {
 	tiles = new Tile[width*height];
 	map = new TCODMap(width,height);
 }
@@ -216,6 +235,18 @@ void Map::init() {
 				stairs->fovOnly = false;
 				engine.actors.push( stairs );
 			}
+		}
+	}
+}
+
+void Map::leave() {
+	// load off all actors back into the biomeData
+	for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
+		Actor* actor = *it;
+		if ( actor->actorRepName != ActorRep::NONE && actor->destructible && !actor->destructible->isDead() ) {
+			chunk->biomeData.creatures[actor->actorRepName]++;
+			delete *it;
+			it = engine.actors.remove(it); // removes the object *it and returns a new iterator (the previous one)
 		}
 	}
 }

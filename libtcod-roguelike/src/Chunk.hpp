@@ -18,7 +18,7 @@ struct Chunk : public Persistent
 
 	struct BiomeData {
 		// collection of creatures and plants inhibiting this chunk (this also includes trees, bushes, grass, etc.)
-		std::map<ActorRep::CreatureName,int> creatures;
+		std::map<ActorRep::Name,int> creatures;
 		// TCODList<Plants*> plants;
 	} biomeData;
 

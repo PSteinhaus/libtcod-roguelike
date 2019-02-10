@@ -3,7 +3,7 @@
 #include <math.h>
 
 Actor::Actor(int x, int y, int ch, const char* name, const TCODColor &col, float volume, float weight, float nutrition) : x(x), y(y), ch(ch), col(col), blocks(true), fovOnly(true),
-attacker(NULL),destructible(NULL),ai(NULL),pickable(NULL),container(NULL),stomach(NULL), volume(volume),weight(weight),nutrition(nutrition) {
+attacker(NULL),destructible(NULL),ai(NULL),pickable(NULL),container(NULL),stomach(NULL), volume(volume),weight(weight),nutrition(nutrition),actorRepName(ActorRep::NONE) {
 	strcpy(this->name, name);
 }
 

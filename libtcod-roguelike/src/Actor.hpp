@@ -16,6 +16,7 @@ public:
 	float volume;	// 1 = 250ml
 	float weight;	// 1 = 1g
 	float nutrition; // how much nutrition an actor with a stomach could get out of this actor ( 1 = 1kcal )
+	ActorRep::Name actorRepName; // under which (if any) name (enumerator) this Actor can be found
 
 	Actor(int x, int y, int ch, const char* name, const TCODColor& col, float volume = 0, float weight = 0, float nutrition = 0);
 	virtual ~Actor();
