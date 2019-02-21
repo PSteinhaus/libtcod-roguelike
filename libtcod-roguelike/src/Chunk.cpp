@@ -1,6 +1,6 @@
 #include "main.hpp"
 
-Chunk::Chunk(BroadType broadType, bool persistentMap, int depth) : persistentMap(persistentMap),broadType(broadType) {
+Chunk::Chunk(BroadType broadType, bool persistentMap, int depth) : persistentMap(persistentMap),map(NULL),broadType(broadType) {
 	switch(broadType) {
 		case CAVE:	terrainData.startWithWalls	= true;
 					terrainData.roomCreation 	= TerrainData::RoomCreation::DIG_RANDOM;

@@ -4,6 +4,7 @@ struct Chunk : public Persistent
 {
 	static const int size = 100;
 	bool persistentMap;
+	Map* map;
 	enum BroadType {
 		CAVE, PLAINS, FOREST, ROCK
 	} broadType;
