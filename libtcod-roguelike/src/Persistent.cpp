@@ -149,8 +149,8 @@ void Chunk::save(TCODZip& zip) {
 	// biomeData
 	zip.putInt( biomeData.creatures.size() );
 	for(auto it = biomeData.creatures.cbegin(); it != biomeData.creatures.cend(); ++it) {
-		zip.putInt( (int)it->first ); // name
 		zip.putInt( it->second );	  // number of creatures of this type
+		zip.putInt( (int)it->first ); // name
 	}
 }
 
@@ -175,43 +175,45 @@ void Chunk::load(TCODZip& zip) {
 }
 
 void Map::save(TCODZip& zip) {
-	bitArray = BitArray();	
 	// iterate over the whole map and save every tile
 	for (int i = 0; i < width*height; i++) {
 		tiles[i].save(zip);
 	}
 	// save the map (libtcod-map-container)
+	bitArray = BitArray();	
 	for (int x = 0; x < width; x++)
 		for (int y = 0; y < height; y++) {
 			bitArray.save(zip, map->isTransparent(x,y));
-			bitArray.save(zip, isWall(x,y));
+			bitArray.save(zip, map->isWalkable(x,y));
 		}
 	// save the last bit array
 	bitArray.finish(zip);
 }
 
 void Map::load(TCODZip& zip) {
-	// load the first bit array
-	bitArray = BitArray(&zip);
 	// iterate over the whole map and load every tile
 	for (int i = 0; i < width*height; i++) {
 		tiles[i].load(zip);
 	}
 	// load the map (libtcod-map-container)
+	// load the first bit array
+	bitArray = BitArray(&zip);
 	for (int x = 0; x < width; x++)
 		for (int y = 0; y < height; y++) {
-			map->setProperties(x,y,!bitArray.load(zip),bitArray.load(zip));
+			map->setProperties(x,y,bitArray.load(zip),bitArray.load(zip));
 		}
 }
 
 void Tile::save(TCODZip& zip) {
-	bitArray.save(zip, explored);
-	//zip.putInt(explored);
+	//bitArray.save(zip, explored);
+	zip.putInt(explored);
+	zip.putInt( (int)fieldType );
 }
 
 void Tile::load(TCODZip& zip) {
-	explored = bitArray.load(zip);
-	//explored = zip.getInt();
+	//explored = bitArray.load(zip);
+	explored = (bool)zip.getInt();
+	fieldType = (Map::FieldType)zip.getInt();
 }
 
 void Actor::save(TCODZip& zip) {
@@ -224,6 +226,7 @@ void Actor::save(TCODZip& zip) {
 	zip.putFloat(volume);
 	zip.putFloat(weight);
 	zip.putFloat(nutrition);
+	zip.putInt( (int)actorRepName );
 	// save component flags
 	zip.putInt(attacker != NULL);
 	zip.putInt(destructible != NULL);
@@ -250,6 +253,7 @@ void Actor::load(TCODZip& zip) {
 	volume=zip.getFloat();
 	weight=zip.getFloat();
 	nutrition=zip.getFloat();
+	actorRepName=(ActorRep::Name)zip.getInt();
 	// load component flags
 	bool hasAttacker=zip.getInt();
 	bool hasDestructible=zip.getInt();

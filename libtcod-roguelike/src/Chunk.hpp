@@ -11,8 +11,8 @@ struct Chunk : public Persistent
 
 	struct TerrainData {
 		bool startWithWalls;
-		enum class RoomCreation { NONE, DIG, DIG_RANDOM } roomCreation;
-		enum class TunnelCreation { NONE, STRAIGHT, RANDOM } tunnelCreation;
+		enum class RoomCreation { NONE, DIG, DIG_RANDOM } roomCreation = RoomCreation::NONE;
+		enum class TunnelCreation { NONE, STRAIGHT, RANDOM } tunnelCreation = TunnelCreation::NONE;
 		int numDownStairs = 0;
 		int numUpStairs = 0;
 	} terrainData;

@@ -1,5 +1,5 @@
 #include "main.hpp"
-#include <math.h>
+#include <cmath>
 #include <stdio.h>
 #include <map>
 
@@ -34,12 +34,12 @@ public:
 					int xStep, yStep;
 					TCODRandom* rng = TCODRandom::getInstance();
 					for(float i=0; i<( pow(node->w*node->h,2)*dig_rnd_mod/1000 ); i++) {
-						map.map->setProperties(x,y,true,true);
+						map.setField(x,y, Map::FieldType::FLOOR);
 						if ( rng->getInt(1,100) > dig_rnd_centricity ) { // make sure not to stray too far from the center
 							do {
 								xStep = rng->getInt(-1,1);
 								yStep = rng->getInt(-1,1);
-							} while ( !map.inMap(x+xStep,y+yStep) );
+							} while ( !map.inMap(x+xStep,y+yStep, false) );
 							x += xStep;
 							y += yStep;
 						} else {
@@ -180,7 +180,21 @@ void Map::init() {
 		typedef Chunk::TerrainData TD;
 
 		// check whether to start with walls or fields
-		if (!chunk->terrainData.startWithWalls) map->clear(true,true);
+		if (chunk->terrainData.startWithWalls)
+			switch(chunk->broadType) {
+				case Chunk::PLAINS : fill(FieldType::TREE);
+				break;
+				default : fill(FieldType::WALL);
+				break;
+			}
+		else 
+			switch(chunk->broadType) {
+				case Chunk::PLAINS : fill(FieldType::GRASS);
+				break;
+				default : fill(FieldType::FLOOR);
+				break;
+			}
+		//map->clear(true,true);
 
 		// dig the rooms
 		switch(chunk->terrainData.roomCreation) {
@@ -255,8 +269,11 @@ bool Map::isWall(int x, int y) const {
 	return !map->isWalkable(x,y);
 }
 
-bool Map::inMap(int x, int y) const {
-	return ( x!=0 && x!=width-1 && y!=0 && y!=height-1 );
+bool Map::inMap(int x, int y, bool includeBorders) const {
+	if (includeBorders)
+		return ( x>=0 && x<width && y>=0 && y<height );
+	else
+		return ( x>0 && x<width-1 && y>0 && y<height-1 );
 }
 
 bool Map::canWalk(int x, int y) const {
@@ -287,27 +304,6 @@ void Map::computeFov() {
 	map->computeFov(engine.player->x, engine.player->y, engine.fovRadius);
 }
 
-void Map::dig(int x1, int y1, int x2, int y2) {
-	// make sure that x1 < x2 and y1 < y2
-	if ( x2 < x1 ) {
-		int tmp = x2;
-		x2 = x1;
-		x1 = tmp;
-	}
-	if ( y2 < y1 ) {
-		int tmp = y2;
-		y2 = y1;
-		y1 = tmp;
-	}
-
-	for (int tileX = x1; tileX <= x2; tileX++) {
-		for (int tileY = y1; tileY <= y2; tileY++) {
-			map->setProperties(tileX,tileY,true,true);
-		}
-	}
-}
-
-
 bool Map::randomFreeField(int x0, int y0, int width0, int height0 ,int* x, int* y, bool wall ) {
 	TCODRandom* rng = TCODRandom::getInstance();
 	int tries = 0;
@@ -327,38 +323,6 @@ bool Map::randomFreeField(int x0, int y0, int width0, int height0 ,int* x, int* 
 	return ( (!wall && canWalk(*x,*y)) || (wall && map->isWalkable(*x,*y)) );
 }
 
-bool Map::connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, int randomness, int thickness) {
-	TCODRandom* rng = TCODRandom::getInstance();
-	int xStart; int yStart;
-	if ( !randomFreeField(x1,y1, width1,height1, &xStart,&yStart, true) ) return false;
-	int xEnd; int yEnd;
-	if ( !randomFreeField(x2,y2, width2,height2, &xEnd,&yEnd, true) ) return false;
-
-	int x=xStart; int y=yStart;
-	while ( x!=xEnd || y!=yEnd ) {
-		if ( rng->getInt(1,100) > randomness ) {
-			// follow a straight path to your destination
-			TCODLine::init (x,y, xEnd,yEnd);
-			TCODLine::step (&x,&y);
-		} else {
-			// go into a random direction
-			int xStep, yStep;
-			do {
-			xStep = rng->getInt(-1,1);
-			yStep = rng->getInt(-1,1);
-			} while ( !inMap(x+xStep,y+yStep) );
-			x += xStep;
-			y += yStep;
-		}
-		for (int i=0; i < thickness-1 || i==0; i++)
-			for (int j=0; j < thickness; j++) {
-				if ( inMap(x+i,y+j) ) map->setProperties(x+i,y+j,true,true);
-			}
-		
-	}
-	return true;
-}
-
 void Map::render() const {
 	/*
 	static const TCODColor darkWall(0,0,100);
@@ -373,7 +337,18 @@ void Map::render() const {
 			TCODConsole::root->setCharForeground(x, y, TCODColor::darkerGrey );
 			TCODConsole::root->setChar(x,y, isWall(x,y) ? '#' : '.');
 			//}
-			if ( isInFov(x,y) ) TCODConsole::root->setCharForeground(x, y, TCODColor::white );
+			if ( isInFov(x,y) )
+				switch( fieldTypeAt(x,y) ) {
+					case FLOOR :
+					case WALL :
+						TCODConsole::root->setCharForeground(x, y, TCODColor::white );
+					break;
+
+					case GRASS :
+					case TREE :
+						TCODConsole::root->setCharForeground(x, y, TCODColor::green );
+					break;
+				}
 		}
 	}
 }

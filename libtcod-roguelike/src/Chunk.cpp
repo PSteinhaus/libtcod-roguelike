@@ -12,8 +12,6 @@ Chunk::Chunk(BroadType broadType, bool persistentMap, int depth) : persistentMap
 					biomeData.creatures[ActorRep::RAT] = 20;
 		break;
 		case PLAINS:terrainData.startWithWalls	= false;
-					terrainData.roomCreation 	= TerrainData::RoomCreation::NONE;
-					terrainData.tunnelCreation	= TerrainData::TunnelCreation::NONE;
 					terrainData.numDownStairs = 1;
 		break;
 		default:

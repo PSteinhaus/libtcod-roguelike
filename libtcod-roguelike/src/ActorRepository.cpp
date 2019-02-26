@@ -1,7 +1,5 @@
 #include "main.hpp"
 
-
-
 Actor* ActorRep::getActor(ActorRep::Name name, int x, int y) {
 	using namespace ActorRep;
 	Actor* actor;
