@@ -6,7 +6,7 @@ struct Chunk : public Persistent
 	bool persistentMap;
 	Map* map;
 	enum BroadType {
-		CAVE, PLAINS, FOREST, ROCK
+		CAVE, PLAINS, FOREST, ROCK, WITCH_HUT
 	} broadType;
 
 	struct TerrainData {

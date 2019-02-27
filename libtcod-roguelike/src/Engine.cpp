@@ -10,8 +10,11 @@ Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gam
 	for(int i=0; i<worldSize; i++)
 		for(int j=0; j<worldSize; j++)
 			for(int k=0; k<worldDepth; k++)
-				world[i][j][k] = (k==0) ? new Chunk(Chunk::PLAINS) : new Chunk(Chunk::CAVE,false,k);
+				if ( i!=worldSize/2 || j!=worldSize/2 || k!=0 )
+					world[i][j][k] = (k==0) ? new Chunk(Chunk::PLAINS) : new Chunk(Chunk::CAVE,false,k);
+	world[worldSize/2][worldSize/2][0] = new Chunk(Chunk::WITCH_HUT,true);
 }
+
 void Engine::init() {
 	player = new Actor(40,25,'@',"player",TCODColor::white);
 	player->destructible = new PlayerDestructible(30,2,"your cadaver");
@@ -171,35 +174,42 @@ Actor* Engine::getActor(int x, int y, bool aliveRequired) const {
 }
 
 void Engine::changeChunk(int dx, int dy, int dz) {
-	if ( dz == 1 ) {
-		depth++;
+	map->leave(); // deletes the Map (and offloads units)
+
+	if ( dz == 1 )
 		gui->message(TCODColor::red,"You descend\ndeeper into the heart of the dungeon...");
+	depth += dz;
+	x += dx;
+	y += dy;
+
+	Chunk* curCh = currentChunk();
+	if ( !curCh->map ) { // if this chunk has no (persistent) map
+		// create a new map
+		map = new Map(80,43, curCh );
+		map->init();
+	} else {
+		map = curCh->map;
+		map->loadSavedActors();
 	}
-	if ( dz == -1 ) {
-		depth--;
-	}
-	map->leave();
-	delete map;
-	// delete all actors but the player
-	for (Actor **it=actors.begin(); it!=actors.end(); it++) {
-		if ( *it != player ) {
-			delete *it;
-			it = actors.remove(it); // removes the object *it and returns a new iterator (the previous one)
-		}
-	}
-	// create a new map
-	map = new Map(80,43, currentChunk() );
-	map->init();
 	gameStatus = STARTUP;
 
 	// try to place stairs at the players position (for logical reasons)
-	for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
-		if ( (dz == 1  && (*it)->ch == '<') ||
-			 (dz == -1 && (*it)->ch == '>') )
-		{
-			(*it)->x = player->x;
-			(*it)->y = player->y;
-			break;
+	if ( dz != 0 ) {
+		for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
+			if ( (dz == 1  && (*it)->ch == '<') ||
+				 (dz == -1 && (*it)->ch == '>') )
+			{
+				// if the new map is persistent then the player has to be placed
+				// at the stairs (instead of the other way around)
+				if ( curCh->persistentMap ) {
+					player->x = (*it)->x;
+					player->y = (*it)->y;
+				} else {
+					(*it)->x = player->x;
+					(*it)->y = player->y;
+				}
+				break;
+			}
 		}
 	}
 }

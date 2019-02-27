@@ -136,7 +136,7 @@ void Gui::load(TCODZip& zip) {
 void Chunk::save(TCODZip& zip) {
 	zip.putInt( persistentMap );
 	zip.putInt( map != NULL );
-	if ( map ) {
+	if ( map && map!=engine.map ) {
 		zip.putInt( map->width );
 		zip.putInt( map->height );
 		map->save(zip);
@@ -157,8 +157,12 @@ void Chunk::save(TCODZip& zip) {
 void Chunk::load(TCODZip& zip) {
 	persistentMap = zip.getInt();
 	if ( zip.getInt() ) {
-		map = new Map( zip.getInt(), zip.getInt(), this);
-		map->load(zip);
+		if ( this == engine.currentChunk() ) {
+			map = engine.map;
+		} else {
+			map = new Map( zip.getInt(), zip.getInt(), this);
+			map->load(zip);
+		}
 	}
 	broadType = (BroadType)zip.getInt();
 	// terrainData

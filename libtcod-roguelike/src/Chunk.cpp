@@ -15,6 +15,11 @@ Chunk::Chunk(BroadType broadType, bool persistentMap, int depth) : persistentMap
 		case PLAINS:terrainData.startWithWalls	= false;
 					terrainData.numDownStairs = 1;
 		break;
+		case WITCH_HUT:
+					persistentMap = true;
+					terrainData.startWithWalls	= false;
+					terrainData.numDownStairs = 1;
+		break;
 		default:
 		break;
 	}

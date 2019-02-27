@@ -170,10 +170,13 @@ Map::Map(int width, int height, Chunk* chunk) : width(width), height(height), ch
 Map::~Map() {
 	delete [] tiles;
 	delete map;
+	savedActors.clearAndDelete();
+	chunk->map = NULL;
 }
 
 void Map::init() {
 	Chunk* chunk = engine.currentChunk();
+	chunk->map = this;
 	TCODBsp bsp(0,0,width,height);
 	BspListener listener(*this);
 	{
@@ -182,6 +185,7 @@ void Map::init() {
 		// check whether to start with walls or fields
 		if (chunk->terrainData.startWithWalls)
 			switch(chunk->broadType) {
+				case Chunk::WITCH_HUT :
 				case Chunk::PLAINS : fill(FieldType::TREE);
 				break;
 				default : fill(FieldType::WALL);
@@ -189,12 +193,12 @@ void Map::init() {
 			}
 		else 
 			switch(chunk->broadType) {
+				case Chunk::WITCH_HUT :
 				case Chunk::PLAINS : fill(FieldType::GRASS);
 				break;
 				default : fill(FieldType::FLOOR);
 				break;
 			}
-		//map->clear(true,true);
 
 		// dig the rooms
 		switch(chunk->terrainData.roomCreation) {
@@ -254,15 +258,36 @@ void Map::init() {
 }
 
 void Map::leave() {
-	// load off all actors back into the biomeData
-	for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
-		Actor* actor = *it;
-		if ( actor->actorRepName != ActorRep::NONE && actor->destructible && !actor->destructible->isDead() ) {
-			chunk->biomeData.creatures[actor->actorRepName]++;
-			delete *it;
-			it = engine.actors.remove(it); // removes the object *it and returns a new iterator (the previous one)
+	if ( !chunk->persistentMap ) {
+		// load off all actors back into the biomeData
+		for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
+			Actor* actor = *it;
+			if ( actor->actorRepName != ActorRep::NONE && actor->destructible && !actor->destructible->isDead() ) {
+				chunk->biomeData.creatures[actor->actorRepName]++;
+			}		
+			// delete all actors but the player
+			if ( actor != engine.player ) {
+				delete *it;
+				it = engine.actors.remove(it); // removes the object *it and returns a new iterator (the previous one)
+			}
+		}
+		delete this;
+	} else {
+		// load off all actors into the savedActors list
+		for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
+			Actor* actor = *it;
+			if ( actor != engine.player ) {
+				savedActors.push(actor);
+				it = engine.actors.remove(it); // removes the object *it and returns a new iterator (the previous one)
+			}
 		}
 	}
+}
+
+// load all actors saved in the savedActors field (filled when the map is left) back into the engine
+void Map::loadSavedActors() {
+	engine.actors.addAll(savedActors);
+	savedActors.clear();
 }
 
 bool Map::isWall(int x, int y) const {

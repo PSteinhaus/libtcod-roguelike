@@ -22,6 +22,7 @@ public:
 	void render() const;
 	void addMonster(int x, int y);
 	void addItem(int x, int y);
+	void loadSavedActors();
 	void load(TCODZip& zip);
 	void save(TCODZip& zip);
 
@@ -35,6 +36,7 @@ protected:
 	Tile* tiles;
 	TCODMap* map;
 	Chunk* chunk;
+	TCODList<Actor*> savedActors;
 	friend class BspListener;
 
 	void dig(int x1, int y1, int x2, int y2);
