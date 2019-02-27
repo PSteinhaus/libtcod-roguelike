@@ -1,10 +1,12 @@
 #include "main.hpp"
 
 Pickable::Pickable() : useable(NULL) {
+	digestor = NULL;
 }
 
 Pickable::~Pickable() {
 	if ( useable ) delete useable;
+	if ( digestor ) delete digestor;
 }
 
 bool Pickable::pick(Actor* owner, Actor* picker) {
@@ -33,6 +35,18 @@ void Pickable::drop(Actor* owner, Actor* carrier) {
 			"You drop the %s.", owner->name);
 		else engine.gui->message(TCODColor::lightGrey,"%s drops a %s.",
 			carrier->name,owner->name);
+	}
+}
+
+void Pickable::vomit(Actor* owner, Actor* carrier) {
+	if ( carrier->stomach ) {
+		carrier->stomach->remove(owner);
+		engine.actors.insertBefore(owner, 0);
+		owner->x = carrier->x;
+		owner->y = carrier->y;
+		owner->col = TCODColor::lightGreen;
+		if (carrier == engine.player) engine.gui->message(TCODColor::lightGreen, "You vomit.");
+		else engine.gui->message(TCODColor::lightGreen,"The %s vomits.", carrier->name);
 	}
 }
 

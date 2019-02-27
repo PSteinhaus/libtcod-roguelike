@@ -5,10 +5,12 @@ Actor* ActorRep::getActor(ActorRep::Name name, int x, int y) {
 	Actor* actor;
 	switch (name) {
 		case RAT:
-			actor = new Actor(x,y,'r',"rat", TCODColor::grey, 3,1000,500);
+			actor = new Actor(x,y,'r',"rat", TCODColor::grey, 3,1000);
 			actor->destructible = new MonsterDestructible(7,0,"rat corpse");
 			actor->attacker = new Attacker(3);
 			actor->ai = new MonsterAi();
+			actor->pickable = new Pickable();
+			actor->pickable->digestor = new Digestor(500);
 		break;
 		case ORC:
 			actor = new Actor(x,y,'o',"orc", TCODColor::desaturatedGreen);
@@ -26,30 +28,6 @@ Actor* ActorRep::getActor(ActorRep::Name name, int x, int y) {
 	}
 	actor->actorRepName = name;
 	return actor;
-}
-
-Actor* Rat(int x, int y) {
-	Actor *rat = new Actor(x,y,'r',"rat", TCODColor::grey, 3,1000,500);
-	rat->destructible = new MonsterDestructible(7,0,"rat corpse");
-	rat->attacker = new Attacker(3);
-	rat->ai = new MonsterAi();
-	return rat;
-}
-
-Actor* Orc(int x, int y) {
-	Actor *orc = new Actor(x,y,'o',"orc", TCODColor::desaturatedGreen);
-	orc->destructible = new MonsterDestructible(10,0,"dead orc");
-	orc->attacker = new Attacker(3);
-	orc->ai = new MonsterAi();
-	return orc;
-}
-
-Actor* Troll(int x, int y) {
-	Actor *troll = new Actor(x,y,'T',"troll", TCODColor::darkerGreen);
-	troll->destructible = new MonsterDestructible(16,1,"troll carcass");
-	troll->attacker = new Attacker(4);
-	troll->ai = new MonsterAi();
-	return troll;
 }
 
 Actor* HealthPotion(int x, int y) {

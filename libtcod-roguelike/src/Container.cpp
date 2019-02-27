@@ -39,7 +39,7 @@ Stomach::Stomach(float maxNutrition, float need, float digestionRate, int size, 
 	// fill stomach completely as standard ( nutrition=-1 is standard )
 	if ( nutrition == -1 ) nutrition = maxNutrition;
 }
-
+/*
 // digest AND control hunger/starvation (basically a kind of stomach AI)
 void Stomach::digest(Actor* owner) {
 	// check whether there is something digestible inside the stomach and if true digest the first thing (the oldest)
@@ -55,6 +55,37 @@ void Stomach::digest(Actor* owner) {
 			if (food->nutrition <= 0) {
 				inventory.remove(food);
 				delete food;
+			}
+			break;
+		}
+	}
+	if (owner->destructible) {
+		// starvation
+		if (nutrition <= maxNutrition/10) {
+			owner->destructible->takeDamage(owner, 1);
+			if ( owner == engine.player ) engine.gui->message(TCODColor::desaturatedRed,"You're starving.");
+		} else if ( nutrition > maxNutrition/4 ) {
+			// heal the owner of this stomach a little
+			owner->destructible->heal( need/100 );
+		}
+	}
+	// hunger
+	nutrition -= need;
+	if ( nutrition < 0 ) nutrition = 0;
+	if (nutrition > maxNutrition) nutrition = maxNutrition;
+}*/
+
+// digest AND control hunger/starvation (basically a kind of stomach AI)
+void Stomach::digest(Actor* owner) {
+	// check whether there is something digestible inside the stomach and if true digest the first thing (the oldest)
+	for(Actor** it=inventory.begin(); it != inventory.end(); it++) {
+		Actor* food = *it;
+		if ( food->pickable->digestor ) {
+			(*food->pickable->digestor)(food, owner);
+			break;
+		} else {
+			if ( TCODRandom::getInstance()->getInt(1,80) == 80 ) {
+				food->pickable->vomit(food, owner);
 			}
 			break;
 		}

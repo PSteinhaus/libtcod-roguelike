@@ -225,7 +225,6 @@ void Actor::save(TCODZip& zip) {
 	zip.putInt(blocks);
 	zip.putFloat(volume);
 	zip.putFloat(weight);
-	zip.putFloat(nutrition);
 	zip.putInt( (int)actorRepName );
 	// save component flags
 	zip.putInt(attacker != NULL);
@@ -252,7 +251,6 @@ void Actor::load(TCODZip& zip) {
 	blocks=zip.getInt();
 	volume=zip.getFloat();
 	weight=zip.getFloat();
-	nutrition=zip.getFloat();
 	actorRepName=(ActorRep::Name)zip.getInt();
 	// load component flags
 	bool hasAttacker=zip.getInt();
@@ -377,6 +375,8 @@ Destructible* Destructible::create(TCODZip& zip) {
 void Pickable::save(TCODZip& zip) {
 	zip.putInt( !!useable );
 	if ( useable ) useable->save(zip);
+	zip.putInt( !!digestor );
+	if ( digestor ) digestor->save(zip);
 }
 
 void Pickable::load(TCODZip& zip) {
@@ -384,6 +384,18 @@ void Pickable::load(TCODZip& zip) {
 		useable = new Useable(NULL,NULL);
 		useable->load(zip);
 	}
+	if ( zip.getInt() ) {
+		digestor = new Digestor(0);
+		digestor->load(zip);
+	}
+}
+
+void Digestor::save(TCODZip& zip) {
+	zip.putFloat(nutrition);
+}
+
+void Digestor::load(TCODZip& zip) {
+	nutrition = zip.getFloat();
 }
 
 void Useable::save(TCODZip& zip) {

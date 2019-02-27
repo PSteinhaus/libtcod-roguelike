@@ -10,6 +10,7 @@ Chunk::Chunk(BroadType broadType, bool persistentMap, int depth) : persistentMap
 					terrainData.numUpStairs 	= 2;
 
 					biomeData.creatures[ActorRep::RAT] = 20;
+					biomeData.creatures[ActorRep::ORC] = 8;
 		break;
 		case PLAINS:terrainData.startWithWalls	= false;
 					terrainData.numDownStairs = 1;

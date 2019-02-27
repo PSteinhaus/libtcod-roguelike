@@ -10,6 +10,7 @@ class Actor;
 #include "Ai.hpp"
 #include "Effect.hpp"
 #include "TargetSelector.hpp"
+#include "Digestor.hpp"
 #include "Pickable.hpp"
 #include "Container.hpp"
 #include "ActorRepository.hpp"
