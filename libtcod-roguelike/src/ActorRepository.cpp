@@ -24,6 +24,14 @@ Actor* ActorRep::getActor(ActorRep::Name name, int x, int y) {
 			actor->attacker = new Attacker(4);
 			actor->ai = new MonsterAi();
 		break;
+		case DOWNSTAIRS:
+			actor = new Actor(x,y,'>',"downstairs",TCODColor::white);
+			actor->fovOnly = false;
+		break;
+		case UPSTAIRS:
+			actor = new Actor(x,y,'<',"upstairs",TCODColor::white);
+			actor->fovOnly = false;
+		break;
 		default:;
 	}
 	actor->actorRepName = name;

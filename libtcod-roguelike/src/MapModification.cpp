@@ -27,16 +27,25 @@ void Map::setRect(int x, int y, int width0, int height0, Map::FieldType fieldTyp
 }
 
 void Map::setEllipse(int x, int y, int width0, int height0, Map::FieldType fieldType) {
+	setEllipseGrad(x,y, width0,height0, 1, fieldType);
+}
+
+void Map::setEllipseGrad(int x, int y, int width0, int height0, float gradStart, FieldType fieldType) {
+	TCODRandom* rng = TCODRandom::getInstance();
 	int xCenter = width0/2; 	// coordinates of the center of the ellipse
 	int yCenter = height0/2;	// relative to x and y
 	for (int i=0; i<width0 && i<width; i++)
 		for (int j=0; j<height0 && j<height; j++) {
 			int iFrC = i-xCenter; // i, measured from the center of the ellipse
 			int jFrC = j-yCenter; // i, measured from the center of the ellipse
-			if( pow(iFrC/xCenter, 2) + pow(jFrC/yCenter, 2) <= 1 && inMap(x+i,y+j) )
-				setField(x+i,y+j,fieldType);
+			float radius = pow(static_cast<float>(iFrC)/xCenter, 2) + pow(static_cast<float>(jFrC)/yCenter, 2);
+			if( radius <= 1 && inMap(x+i,y+j) ) {
+				if ( radius <= gradStart ) { setField(x+i,y+j,fieldType); continue; }
+				if ( (radius-gradStart) / (1-gradStart) <= rng->getFloat(0,1) ) setField(x+i,y+j,fieldType); // just draw an ellipse yourself if you want to know what the first term does...
+			}
 		}
 }
+
 
 void Map::dig(int x1, int y1, int x2, int y2) {
 	// make sure that x1 < x2 and y1 < y2

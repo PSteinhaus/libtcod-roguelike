@@ -182,76 +182,88 @@ void Map::init() {
 	{
 		typedef Chunk::TerrainData TD;
 
-		// check whether to start with walls or fields
-		if (chunk->terrainData.startWithWalls)
-			switch(chunk->broadType) {
-				case Chunk::WITCH_HUT :
-				case Chunk::PLAINS : fill(FieldType::TREE);
-				break;
-				default : fill(FieldType::WALL);
-				break;
-			}
-		else 
-			switch(chunk->broadType) {
-				case Chunk::WITCH_HUT :
-				case Chunk::PLAINS : fill(FieldType::GRASS);
-				break;
-				default : fill(FieldType::FLOOR);
-				break;
-			}
-
-		// dig the rooms
-		switch(chunk->terrainData.roomCreation) {
-			case TD::RoomCreation::DIG_RANDOM:
-			{
-				bsp.splitRecursive(NULL,4,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
-
-				listener.state = BspListener::DIG_RND;
-				listener.dig_rnd_mod = 0.4;
-				bsp.traverseInvertedLevelOrder(&listener,NULL);
-			}
-			break;
-			case TD::RoomCreation::DIG:
-			{
-				TCODBsp bsp(0,0,width,height);
-				bsp.splitRecursive(NULL,6,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
-				BspListener listener(*this);
-				listener.state = BspListener::DEFAULT;
-				bsp.traverseInvertedLevelOrder(&listener,NULL);
-			}
-			break;
-			default:
-			break;
-		}
-
-		// connect them
-		switch(chunk->terrainData.tunnelCreation) {
-			case TD::TunnelCreation::RANDOM:
-			{
-				listener.state = BspListener::CONNECT_RND;
-				TCODPath path = TCODPath(map);
-				bsp.traverseInvertedLevelOrder(&listener,&path);
-				// (add stairs)
-			}
-			break;
-			default:
-			break;
-		}
-
-		// add stairs
+		switch (chunk->broadType)
 		{
-			int x, y;
-			for(int i=0; i<chunk->terrainData.numDownStairs; i++) {
-				randomFreeField(0,0,width,height, &x,&y);
-				Actor* stairs = new Actor(x,y,'>',"downstairs",TCODColor::white);
-				stairs->fovOnly = false;
-				engine.actors.push( stairs );
+		// special cases
+		case Chunk::WITCH_HUT :
+			fill(FieldType::TREE);
+			setEllipseGrad(1,1, width-2,height-2, 0.5, FieldType::GRASS);
+			engine.actors.push( ActorRep::getActor( ActorRep::Name::DOWNSTAIRS, (width/2)+9,(height/2)-5 ) );
+			// build witch-hut
+			setRect( (width/2)-3,(height/2)-2, 6,5, FieldType::WALL );
+			setRect( (width/2)-2,(height/2)-1, 4,3, FieldType::FLOOR );
+			setField( (width/2),(height/2)-2, FieldType::FLOOR );
+
+		break;
+
+		default:
+			// check whether to start with walls or fields
+			if (chunk->terrainData.startWithWalls)
+				switch(chunk->broadType) {
+					case Chunk::WITCH_HUT :
+					case Chunk::PLAINS : fill(FieldType::TREE);
+					break;
+					default : fill(FieldType::WALL);
+					break;
+				}
+			else 
+				switch(chunk->broadType) {
+					case Chunk::WITCH_HUT :
+					case Chunk::PLAINS : fill(FieldType::GRASS);
+					break;
+					default : fill(FieldType::FLOOR);
+					break;
+				}
+
+			// dig the rooms
+			switch(chunk->terrainData.roomCreation) {
+				case TD::RoomCreation::DIG_RANDOM:
+				{
+					bsp.splitRecursive(NULL,4,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
+
+					listener.state = BspListener::DIG_RND;
+					listener.dig_rnd_mod = 0.4;
+					bsp.traverseInvertedLevelOrder(&listener,NULL);
+				}
+				break;
+				case TD::RoomCreation::DIG:
+				{
+					TCODBsp bsp(0,0,width,height);
+					bsp.splitRecursive(NULL,6,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
+					BspListener listener(*this);
+					listener.state = BspListener::DEFAULT;
+					bsp.traverseInvertedLevelOrder(&listener,NULL);
+				}
+				break;
+				default:
+				break;
 			}
-			for(int i=0; i<chunk->terrainData.numUpStairs; i++) {
-				randomFreeField(0,0,width,height, &x,&y);
-				Actor* stairs = new Actor(x,y,'<',"upstairs",TCODColor::white);
-				stairs->fovOnly = false;
-				engine.actors.push( stairs );
+
+			// connect them
+			switch(chunk->terrainData.tunnelCreation) {
+				case TD::TunnelCreation::RANDOM:
+				{
+					listener.state = BspListener::CONNECT_RND;
+					TCODPath path = TCODPath(map);
+					bsp.traverseInvertedLevelOrder(&listener,&path);
+					// (add stairs)
+				}
+				break;
+				default:
+				break;
+			}
+
+			// add stairs
+			{
+				int x, y;
+				for(int i=0; i<chunk->terrainData.numDownStairs; i++) {
+					randomFreeField(0,0,width,height, &x,&y);
+					engine.actors.push( ActorRep::getActor( ActorRep::Name::DOWNSTAIRS, x,y ) );
+				}
+				for(int i=0; i<chunk->terrainData.numUpStairs; i++) {
+					randomFreeField(0,0,width,height, &x,&y);
+					engine.actors.push( ActorRep::getActor( ActorRep::Name::UPSTAIRS, x,y ) );
+				}
 			}
 		}
 	}

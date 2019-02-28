@@ -2,7 +2,7 @@
 
 namespace ActorRep {
 	enum Name {
-		NONE, RAT, ORC, TROLL
+		NONE, RAT, ORC, TROLL, DOWNSTAIRS, UPSTAIRS
 	};
 
 	Actor* getActor(Name name, int x, int y);

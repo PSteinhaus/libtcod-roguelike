@@ -30,6 +30,7 @@ public:
 	void setField	(int x, int y, FieldType fieldType);
 	void setRect	(int x, int y, int width0, int height0, FieldType fieldType);
 	void setEllipse	(int x, int y, int width0, int height0, FieldType fieldType);
+	void setEllipseGrad	(int x, int y, int width0, int height0, float gradStart, FieldType fieldType);
 	inline void fill(FieldType fieldType) { setRect(0,0,width,height,fieldType); }
 
 protected:
