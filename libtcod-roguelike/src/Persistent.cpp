@@ -43,7 +43,7 @@ void BitArray::finish(TCODZip& zip) {
 }
 
 void Engine::save() {
-	if ( player->destructible->isDead() ) {
+	if ( player==NULL || player->destructible->isDead() ) {
 		TCODSystem::deleteFile("game.sav");
 	} else {
 		TCODZip zip;

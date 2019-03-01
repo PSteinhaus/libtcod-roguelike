@@ -16,6 +16,9 @@ Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gam
 }
 
 void Engine::init() {
+	depth = 1;
+	x = worldSize/2;
+	y = worldSize/2;
 	player = new Actor(40,25,'@',"player",TCODColor::white);
 	player->destructible = new PlayerDestructible(30,2,"your cadaver");
 	player->attacker = new Attacker(5);
@@ -171,6 +174,18 @@ Actor* Engine::getActor(int x, int y, bool aliveRequired) const {
 		}
 	}
 	return NULL;
+}
+
+TCODList<Actor*> Engine::getActors(int x, int y, bool aliveRequired) const {
+	TCODList<Actor*> list;
+	for (Actor** it = actors.begin(); it != actors.end(); it++) {
+		Actor* actor = *it;
+		if ( actor->x == x && actor->y == y && ( !aliveRequired ||
+			(actor->destructible && !actor->destructible->isDead()) ) ) {
+			list.push(actor);
+		}
+	}
+	return list;
 }
 
 void Engine::changeChunk(int dx, int dy, int dz) {

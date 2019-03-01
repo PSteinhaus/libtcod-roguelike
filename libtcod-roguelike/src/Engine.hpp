@@ -38,6 +38,7 @@ public :
 	void save();
 	void gameMenu();
 	Actor* getActor(int x, int y, bool aliveRequired = true) const;
+	TCODList<Actor*> getActors(int x, int y, bool aliveRequired = true) const;
 	inline Chunk* currentChunk() { return world[x][y][depth]; }
 };
 

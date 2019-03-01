@@ -40,7 +40,7 @@ void DoorEffect::applyTo(Actor* actor) {
 	if ( actor->blocks ) {
 		actor->ch = '.';
 		actor->blocks = false;
-	} else {
+	} else if ( engine.getActors(actor->x,actor->y, false).size()==1 ) { // if there is only the door and nothing else
 		actor->ch = originalChar;
 		actor->blocks = true;
 	}
