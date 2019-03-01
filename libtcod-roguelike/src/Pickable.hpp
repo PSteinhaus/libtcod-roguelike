@@ -1,7 +1,7 @@
 class Useable : public Persistent
 {
 public:
-	Useable(TargetSelector *selector, Effect *effect);
+	Useable(TargetSelector *selector, Effect *effect, bool destroyWhenEmpty=true);
 	virtual ~Useable();
 	virtual bool use(Actor* owner, Actor* user);
 	void save(TCODZip& zip);
@@ -10,6 +10,7 @@ public:
 protected:
 	TargetSelector *selector;
 	Effect *effect;
+	bool destroyWhenEmpty;
 };
 
 class Pickable : public Persistent

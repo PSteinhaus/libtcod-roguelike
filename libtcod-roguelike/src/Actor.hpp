@@ -13,6 +13,7 @@ public:
 	Pickable* pickable; // something that can be picked up and used
 	Container* container; // something that can contain actors
 	Stomach* stomach; // a container that can contain actors to be digested
+	Useable* interactable; // whether and how you can interact with this actor 
 	float volume;	// 1 = 250ml
 	float weight;	// 1 = 1g
 	ActorRep::Name actorRepName; // under which (if any) name (enumerator) this Actor can be found

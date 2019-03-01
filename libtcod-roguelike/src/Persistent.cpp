@@ -192,6 +192,11 @@ void Map::save(TCODZip& zip) {
 		}
 	// save the last bit array
 	bitArray.finish(zip);
+	// save the savedActors
+	zip.putInt(savedActors.size());
+	for (Actor** it=savedActors.begin(); it!=savedActors.end(); it++) {
+		(*it)->save(zip);
+	}
 }
 
 void Map::load(TCODZip& zip) {
@@ -206,6 +211,14 @@ void Map::load(TCODZip& zip) {
 		for (int y = 0; y < height; y++) {
 			map->setProperties(x,y,bitArray.load(zip),bitArray.load(zip));
 		}
+	// load the savedActors
+	int nbActors = zip.getInt();
+	while ( nbActors > 0 ) {
+		Actor* actor = new Actor(0,0,0,"",TCODColor::white);
+		actor->load(zip);
+		savedActors.push(actor);
+		nbActors--;
+	}
 }
 
 void Tile::save(TCODZip& zip) {
@@ -227,6 +240,7 @@ void Actor::save(TCODZip& zip) {
 	zip.putColor(&col);
 	zip.putString(name);
 	zip.putInt(blocks);
+	zip.putInt(fovOnly);
 	zip.putFloat(volume);
 	zip.putFloat(weight);
 	zip.putInt( (int)actorRepName );
@@ -237,6 +251,7 @@ void Actor::save(TCODZip& zip) {
 	zip.putInt(pickable != NULL);
 	zip.putInt(container != NULL);
 	zip.putInt(stomach != NULL);
+	zip.putInt(interactable != NULL);
 	// save components themselves
 	if ( attacker ) attacker->save(zip);
 	if ( destructible ) destructible->save(zip);
@@ -244,6 +259,7 @@ void Actor::save(TCODZip& zip) {
 	if ( pickable ) pickable->save(zip);
 	if ( container ) container->save(zip);
 	if ( stomach ) stomach->save(zip);
+	if ( interactable ) interactable->save(zip);
 }
 
 void Actor::load(TCODZip& zip) {
@@ -253,6 +269,7 @@ void Actor::load(TCODZip& zip) {
 	col=zip.getColor();
 	strcpy( this->name, zip.getString() );
 	blocks=zip.getInt();
+	fovOnly=zip.getInt();
 	volume=zip.getFloat();
 	weight=zip.getFloat();
 	actorRepName=(ActorRep::Name)zip.getInt();
@@ -263,6 +280,7 @@ void Actor::load(TCODZip& zip) {
 	bool hasPickable=zip.getInt();
 	bool hasContainer=zip.getInt();
 	bool hasStomach=zip.getInt();
+	bool hasInteractable=zip.getInt();
 	// load components
 	if ( hasAttacker ) {
 		attacker = new Attacker(0.0f);
@@ -285,6 +303,10 @@ void Actor::load(TCODZip& zip) {
 	if ( hasStomach ) {
 		stomach = new Stomach(0,0,0,0);
 		stomach->load(zip);
+	}
+	if ( hasInteractable ) {
+		interactable = new Useable(NULL,NULL);
+		interactable->load(zip);
 	}
 }
 
@@ -406,6 +428,7 @@ void Useable::save(TCODZip& zip) {
 	zip.putInt( !!selector ); // has selector
 	if (selector) selector->save(zip);
 	effect->save(zip);
+	zip.putInt( destroyWhenEmpty );
 }
 
 void Useable::load(TCODZip& zip) {
@@ -414,6 +437,7 @@ void Useable::load(TCODZip& zip) {
 		selector->load(zip);
 	}
 	effect =	Effect::create(zip);
+	destroyWhenEmpty = zip.getInt();
 }
 
 void TargetSelector::save(TCODZip& zip) {
@@ -428,21 +452,31 @@ void TargetSelector::load(TCODZip& zip) {
 	areaRange = zip.getFloat();
 }
 
+// Effects
+
 Effect* Effect::create(TCODZip& zip) {
 	EffectType type = (EffectType)zip.getInt();
 	Effect* effect = NULL;
 	switch(type) {
 		case HEALTH : effect = new HealthEffect(0,NULL); break;
 		case CONFUSE : effect = new ConfusionEffect(0,NULL); break;
+		case DOOR : effect = new DoorEffect('*'); break;
 	}
 	effect->load(zip);
 	return effect;
 }
 
-// Effects
+void Effect::save(TCODZip& zip) {
+	zip.putInt(empty);
+}
+
+void Effect::load(TCODZip& zip) {
+	empty = zip.getInt();
+}
 
 void HealthEffect::save(TCODZip& zip) {
 	zip.putInt(HEALTH);
+	Effect::save(zip);
 	zip.putFloat(amount);
 	zip.putInt( !!message ); // has selector
 	if (message) {
@@ -452,12 +486,14 @@ void HealthEffect::save(TCODZip& zip) {
 }
 
 void HealthEffect::load(TCODZip& zip) {
+	Effect::load(zip);
 	amount = zip.getFloat();
 	if ( zip.getInt() ) message = zip.getString();
 }
 
 void ConfusionEffect::save(TCODZip& zip) {
 	zip.putInt(CONFUSE);
+	Effect::save(zip);
 	zip.putInt(nbTurns);
 	zip.putInt( !!message ); // has selector
 	if (message) {
@@ -467,8 +503,20 @@ void ConfusionEffect::save(TCODZip& zip) {
 }
 
 void ConfusionEffect::load(TCODZip& zip) {
+	Effect::load(zip);
 	nbTurns = zip.getInt();
 	if ( zip.getInt() ) message = zip.getString();
+}
+
+void DoorEffect::save(TCODZip& zip) {
+	zip.putInt(DOOR);
+	Effect::save(zip);
+	zip.putInt(originalChar);
+}
+
+void DoorEffect::load(TCODZip& zip) {
+	Effect::load(zip);
+	originalChar = zip.getInt();
 }
 
 // AIs

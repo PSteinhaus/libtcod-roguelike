@@ -17,6 +17,7 @@ public:
 	void load(TCODZip& zip);
 
 protected:
+	bool interactAt(Actor* owner, int targetX, int targetY);
 	bool moveOrAttack(Actor* owner, int targetX, int targetY);
 	void handleActionKey(Actor* owner, int ascii);
 	Actor* choseFromInventory(Actor* owner);

@@ -193,6 +193,7 @@ void Map::init() {
 			setRect( (width/2)-3,(height/2)-2, 6,5, FieldType::WALL );
 			setRect( (width/2)-2,(height/2)-1, 4,3, FieldType::FLOOR );
 			setField( (width/2),(height/2)-2, FieldType::FLOOR );
+			engine.actors.push( ActorRep::getActor( ActorRep::Name::DOOR, (width/2),(height/2)-2 ) );
 
 		break;
 

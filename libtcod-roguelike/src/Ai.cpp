@@ -10,27 +10,54 @@ void PlayerAi::update(Actor* owner) {
 	}
 	int dx = 0, dy = 0;
 	numpadMove(&dx, &dy);
-	if ( engine.lastKey.vk == TCODK_KP5 ) engine.gameStatus = Engine::NEW_TURN;
 	switch(engine.lastKey.vk) {
 		case TCODK_CHAR :	handleActionKey(owner, engine.lastKey.c); break;
 		default: break;
 	}
-	if ( dx != 0 || dy != 0 ) {
-		engine.gameStatus = Engine::NEW_TURN;
-		if ( moveOrAttack(owner, owner->x+dx, owner->y+dy) ) {
-			engine.map->computeFov();
+	if ( engine.lastKey.lctrl ) {
+		if( interactAt( owner, owner->x+dx, owner->y+dy ) )
+			engine.gameStatus = Engine::NEW_TURN;
+	} else {
+		if ( engine.lastKey.vk == TCODK_KP5 ) engine.gameStatus = Engine::NEW_TURN;
+		if ( dx != 0 || dy != 0 ) {
+			engine.gameStatus = Engine::NEW_TURN;
+			if ( moveOrAttack(owner, owner->x+dx, owner->y+dy) ) {
+				engine.map->computeFov();
+			}
 		}
 	}
 }
 
-bool PlayerAi::moveOrAttack(Actor* owner, int targetX, int targetY) {
-	if ( engine.map->isWall(targetX,targetY) ) return false;
-	// look for living actors to attack
+bool PlayerAi::interactAt(Actor* owner, int targetX, int targetY) {
+	// look for living actors to attack or interact with
 	for (Actor** iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
 		Actor* actor = *iterator;
-		if ( actor->destructible && !actor->destructible->isDead() && actor->x == targetX && actor->y == targetY ) {
-			owner->attacker->attack(owner, actor);
-			return false;
+		if ( actor->x == targetX && actor->y == targetY ) {
+			if ( actor->interactable ) {
+				// if this actor can be interacted with interact with it
+				actor->interactable->use(actor,owner);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool PlayerAi::moveOrAttack(Actor* owner, int targetX, int targetY) {
+	if ( engine.map->isWall(targetX,targetY) ) return false;
+	// look for living actors to attack or interact with
+	for (Actor** iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
+		Actor* actor = *iterator;
+		if ( actor->x == targetX && actor->y == targetY ) {
+			if ( actor->interactable && ( !actor->destructible || actor->destructible->isDead() ) && actor->blocks ) {
+				// if this actor can be interacted with, blocks, and cannot (or should not) be attacked, interact with it
+				actor->interactable->use(actor,owner);
+				return false;
+			}
+			else if ( actor->destructible && !actor->destructible->isDead() ) {
+				owner->attacker->attack(owner, actor);
+				return false;
+			}
 		}
 	}
 	// look for corpses or items

@@ -67,7 +67,7 @@ bool Pickable::eat(Actor* owner, Actor* eater) {
 	return false;
 }
 
-Useable::Useable(TargetSelector *selector, Effect *effect) : selector(selector), effect(effect) {
+Useable::Useable(TargetSelector *selector, Effect *effect, bool destroyWhenEmpty) : selector(selector),effect(effect),destroyWhenEmpty(destroyWhenEmpty) {
 }
 
 Useable::~Useable() {
@@ -76,21 +76,32 @@ Useable::~Useable() {
 }
 
 bool Useable::use(Actor* owner, Actor* user) {
-	TCODList<Actor *> list;
-	if ( selector ) {
-		selector->selectTargets(user, list);
-	} else {
-		list.push(user);
-	}
-	
-	bool succeed=false;
-	for (Actor **it=list.begin(); it!=list.end(); it++) {
-		effect->applyTo(*it);
-		succeed=true;
-	}
-	if ( succeed && user->container ) {
-		user->container->remove(owner);
-		delete owner;
-	}
-	return succeed;
+	if ( !effect->empty ) {
+		// find targets
+		TCODList<Actor *> list;
+		if ( selector ) {
+			selector->selectTargets(user, owner, list);
+		} else {
+			list.push(user);
+		}
+		// apply effect to them
+		bool succeed=false;
+		for (Actor **it=list.begin(); it!=list.end(); it++) {
+			if ( !effect->empty ) {
+				effect->applyTo(*it);
+				succeed=true;
+			}
+		}
+		// if the effect was used and is now empty then destroy yourself
+		// (if you have to "destroyWhenEmpty")
+		if ( succeed ) {
+			if ( effect->empty && destroyWhenEmpty ) {
+				if ( user->container ) {
+					user->container->remove(owner);
+				}
+				delete owner;
+			}
+		}
+		return succeed;
+	} else return false;
 }

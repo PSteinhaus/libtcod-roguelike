@@ -32,3 +32,16 @@ void ConfusionEffect::applyTo(Actor* actor) {
 	actor->ai = confusedAi;
 	if (message) engine.gui->message(TCODColor::lightGreen, message, actor->name);
 }
+
+DoorEffect::DoorEffect(char originalChar) : originalChar(originalChar) {
+}
+
+void DoorEffect::applyTo(Actor* actor) {
+	if ( actor->blocks ) {
+		actor->ch = '.';
+		actor->blocks = false;
+	} else {
+		actor->ch = originalChar;
+		actor->blocks = true;
+	}
+}

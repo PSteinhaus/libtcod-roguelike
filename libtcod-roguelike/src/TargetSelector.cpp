@@ -3,7 +3,7 @@
 TargetSelector::TargetSelector(SelectorType type, float range, float areaRange) : type(type), range(range), areaRange(areaRange) {
 }
 
-void TargetSelector::selectTargets(Actor *user, TCODList<Actor *> & list) {
+void TargetSelector::selectTargets(Actor *user, Actor *owner, TCODList<Actor *> & list) {
 	switch(type) {
 		case CLOSEST_MONSTER :
 		{
@@ -50,6 +50,9 @@ void TargetSelector::selectTargets(Actor *user, TCODList<Actor *> & list) {
 					}
 				}
 			}
+		break;
+		case EFFECT_CARRIER :
+			list.push(owner);
 		break;
 	}
 	if ( list.isEmpty() ) {
