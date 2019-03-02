@@ -267,9 +267,6 @@ void Map::init() {
 				}
 			}
 		}
-		// DEBUG
-		printf( "rats: %d", chunk->biomeData.creatures[ActorRep::RAT] );
-		printf( "orcs: %d", chunk->biomeData.creatures[ActorRep::ORC] );
 	}
 }
 
