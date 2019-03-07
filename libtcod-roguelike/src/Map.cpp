@@ -285,7 +285,6 @@ void Map::init() {
 
 			// add stairs
 			{
-				printf("stairs added\n");
 				int x, y;
 				for(int i=0; i<chunk->terrainData.numDownStairs; i++) {
 					randomFreeField(0,0,width,height, &x,&y);

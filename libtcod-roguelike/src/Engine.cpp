@@ -7,15 +7,17 @@ Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gam
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
 	TCODConsole::initRoot(screenWidth, screenHeight, "witchRogue prototype", false, TCOD_RENDERER_GLSL);
 	gui = new Gui();
+}
+
+void Engine::init() {
+	// generate the world
 	for(int i=0; i<worldSize; i++)
 		for(int j=0; j<worldSize; j++)
 			for(int k=0; k<worldDepth; k++)
 				if ( i!=worldSize/2 || j!=worldSize/2 || k!=0 )
 					world[i][j][k] = (k==0) ? new Chunk(Chunk::PLAINS) : new Chunk(Chunk::CAVE,false,k);
 	world[worldSize/2][worldSize/2][0] = new Chunk(Chunk::WITCH_HUT,true);
-}
 
-void Engine::init() {
 	depth = 1;
 	x = worldSize/2;
 	y = worldSize/2;
@@ -28,8 +30,7 @@ void Engine::init() {
 	player->stomach = new Stomach(4000,2,80,0,6,4000);
 	addActor(player);
 	map->init();
-	gui->message(TCODColor::red,
-	"Welcome stranger!\nPrepare to perish in the Tombs of the Ancient Kings.");
+	gui->message(TCODColor::red,"Welcome stranger.");
 	gameStatus = STARTUP;
 }
 
@@ -37,22 +38,19 @@ void Engine::terminate() {
 	for (auto it=actorsBegin(); it!=actorsEnd(); it++)
 		delete *it;
 	actors.clear();
-	/*
-	for (auto iter = actorsAt.begin(); iter != actorsAt.end(); iter++)
-		iter->second.clear();
-	*/
 	actorsAt.clear();
 	if ( map ) delete map;
 	gui->clear();
+	// delete world
+	for(int i=0; i<worldSize; i++)
+		for(int j=0; j<worldSize; j++)
+			for(int k=0; k<worldDepth; k++)
+				delete world[i][j][k];
 }
 
 Engine::~Engine() {
 	terminate();
 	delete gui;
-	for(int i=0; i<worldSize; i++)
-		for(int j=0; j<worldSize; j++)
-			for(int k=0; k<worldDepth; k++)
-				delete world[i][j][k];
 }
 
 void Engine::update() {
@@ -81,14 +79,66 @@ void Engine::render() {
 	// draw the map
 	map->render();
 	// draw the actors
+	/*
+	// draw dead non-items first
 	for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
 		Actor* actor = *it;
-		if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
-			|| map->isInFov(actor->x,actor->y)) )
-		{
-			actor->render();
-		}
+		if ( !actor->destructible && !actor->pickable )
+			if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
+				|| map->isInFov(actor->x,actor->y)) )
+			{
+				actor->render();
+			}
 	}
+	// draw items
+	for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
+		Actor* actor = *it;
+		if ( actor->pickable )
+			if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
+				|| map->isInFov(actor->x,actor->y)) )
+			{
+				actor->render();
+			}
+	}
+	// draw the rest
+	for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
+		Actor* actor = *it;
+		if ( actor->destructible && !actor->pickable )
+			if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
+				|| map->isInFov(actor->x,actor->y)) )
+			{
+				actor->render();
+			}
+	}*/
+	enum DrawState { STRUCTURES, ITEMS, CREATURES, DONE } state = STRUCTURES;
+	while ( state != DONE ) {
+		for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
+			Actor* actor = *it;
+			switch(state) {
+				case STRUCTURES:
+					// draw dead non-items first
+					if ( actor->destructible || actor->pickable ) continue;
+				break;
+				case ITEMS:
+					// draw items
+					if ( !actor->pickable ) continue;
+				break;
+				case CREATURES:
+					// draw the rest
+					if ( !actor->destructible || actor->pickable ) continue;
+				break;
+				default:;
+			}
+			// if in sight (or !fovOnly)
+			if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
+				|| map->isInFov(actor->x,actor->y)) )
+			{
+				actor->render();
+			}
+		}
+		state = (DrawState)( ((int)state)+1 ); //state++
+	}
+
 	player->render();
 	// show the player's stats
 	gui->render();
