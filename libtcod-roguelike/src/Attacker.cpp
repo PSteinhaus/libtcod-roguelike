@@ -9,7 +9,7 @@ void Attacker::attack(Actor* owner, Actor* target) {
 		float damage = target->destructible->calcDamage(power);
 		if ( damage > 0 ) {
 			engine.gui->message(TCODColor::white,
-			"%s attacks %s for %g hit points", owner->name, target->name, damage);
+			"%s attacks %s for %g hit points", owner->name, target->name, damage );
 		} else {
 			engine.gui->message(TCODColor::white,
 			"%s attacks %s, but it has no effect!", owner->name, target->name);

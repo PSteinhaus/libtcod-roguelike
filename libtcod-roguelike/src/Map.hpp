@@ -15,6 +15,8 @@ public:
 	bool isInFov(int x, int y) const;
 	bool isExplored(int x, int y) const;
 	void computeFov();
+	void computeTCODMapAt(int x, int y);
+	void computeTileMapAt(int x, int y);
 	bool inMap(int x, int y, bool includeBorders=true) const;
 	bool isWall(int x, int y) const;
 	inline FieldType fieldTypeAt(int x, int y) const;
@@ -22,6 +24,8 @@ public:
 	void render() const;
 	void addMonster(int x, int y);
 	void addItem(int x, int y);
+	void addActor(Actor* actor);
+	void removeActor(Actor* actor);
 	void loadSavedActors();
 	void load(TCODZip& zip);
 	void save(TCODZip& zip);
@@ -36,6 +40,7 @@ public:
 protected:
 	Tile* tiles;
 	TCODMap* map;
+	TCODMap* tileMap;
 	Chunk* chunk;
 	TCODList<Actor*> savedActors;
 	friend class BspListener;
@@ -48,11 +53,12 @@ protected:
 
 struct Tile : public Persistent {
 	bool explored;	// has the player already seen this tile?
+	bool transparent;	// can the player (and possibly monsters) look through this tile?
+	bool walkable;	// can the player (and possibly monsters) walk over this tile?
+
 	Map::FieldType fieldType;
 
-	Tile() : explored(false), fieldType(Map::FieldType::FLOOR) {}
+	Tile() : explored(false), transparent(false), walkable(false), fieldType(Map::FieldType::FLOOR) {}
 	void load(TCODZip& zip);
 	void save(TCODZip& zip);
 };
-
-Map::FieldType Map::fieldTypeAt(int x, int y) const { return tiles[x+y*width].fieldType; }

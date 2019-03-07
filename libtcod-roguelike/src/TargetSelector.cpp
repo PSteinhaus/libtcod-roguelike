@@ -27,10 +27,9 @@ void TargetSelector::selectTargets(Actor *user, Actor *owner, TCODList<Actor *> 
 		break;
 		case USER_RANGE :
 		{
-			for (Actor **iterator=engine.actors.begin();
-				iterator != engine.actors.end(); iterator++)
+			for (auto iterator=engine.actorsBegin(); iterator != engine.actorsEnd(); iterator++)
 			{
-				Actor *actor=*iterator;
+				Actor* actor=*iterator;
 				if ( actor != user && actor->destructible && !actor->destructible->isDead()
 					&& actor->getDistance(user->x,user->y) <= range)
 				{
@@ -43,7 +42,7 @@ void TargetSelector::selectTargets(Actor *user, Actor *owner, TCODList<Actor *> 
 			int x,y;
 			engine.gui->message(TCODColor::cyan, "Choose target,\npress Esc to cancel.");
 			if ( engine.pickATile(&x,&y,range)) {
-				for (Actor **iterator=engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
+				for (auto iterator=engine.actorsBegin(); iterator != engine.actorsEnd(); iterator++) {
 					Actor *actor=*iterator;
 					if ( actor->destructible && !actor->destructible->isDead() && actor->getDistance(x,y) <= areaRange) {                
 						list.push(actor);

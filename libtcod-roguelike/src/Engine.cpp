@@ -19,14 +19,14 @@ void Engine::init() {
 	depth = 1;
 	x = worldSize/2;
 	y = worldSize/2;
+	map = new Map(80,43, currentChunk() );
 	player = new Actor(40,25,'@',"player",TCODColor::white);
 	player->destructible = new PlayerDestructible(30,2,"your cadaver");
 	player->attacker = new Attacker(5);
 	player->ai = new PlayerAi();
 	player->container = new Container(26,8);
 	player->stomach = new Stomach(4000,2,80,0,6,4000);
-	actors.push(player);
-	map = new Map(80,43, currentChunk() );
+	addActor(player);
 	map->init();
 	gui->message(TCODColor::red,
 	"Welcome stranger!\nPrepare to perish in the Tombs of the Ancient Kings.");
@@ -34,7 +34,14 @@ void Engine::init() {
 }
 
 void Engine::terminate() {
-	actors.clearAndDelete();
+	for (auto it=actorsBegin(); it!=actorsEnd(); it++)
+		delete *it;
+	actors.clear();
+	/*
+	for (auto iter = actorsAt.begin(); iter != actorsAt.end(); iter++)
+		iter->second.clear();
+	*/
+	actorsAt.clear();
 	if ( map ) delete map;
 	gui->clear();
 }
@@ -59,11 +66,11 @@ void Engine::update() {
 	player->update();
 	if ( gameStatus == NEW_TURN ) {
 		player->stomach->digest(player);
-		for (Actor** iterator=actors.begin(); iterator != actors.end(); iterator++) {
-			Actor* actor=*iterator;
+		for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
+			Actor* actor=*it;
 			if ( actor != player ) {
 				actor->update();
-				if ( actor->stomach ) actor->stomach->digest(actor);
+				if ( actor->stomach ) actor->stomach->digest(actor);				
 			}
 		}
 	}
@@ -74,10 +81,11 @@ void Engine::render() {
 	// draw the map
 	map->render();
 	// draw the actors
-	for (Actor** iterator=actors.begin(); iterator != actors.end(); iterator++) {
-		Actor* actor = *iterator;
-		if ( actor != player && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
-			|| map->isInFov(actor->x,actor->y)) ) {
+	for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
+		Actor* actor = *it;
+		if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
+			|| map->isInFov(actor->x,actor->y)) )
+		{
 			actor->render();
 		}
 	}
@@ -91,15 +99,78 @@ void Engine::render() {
 }
 
 void Engine::sendToBack(Actor* actor) {
-	actors.remove(actor);
-	actors.insertBefore(actor,0);
+	Point position = Point(actor->x, actor->y);
+	actorsAt[position].remove(actor);
+	actorsAt[position].insertBefore(actor,0);
 }
 
-Actor* Engine::getClosestMonster(bool fovRequired, int x, int y, float range) const {
+std::list<Actor*>::iterator Engine::actorsBegin() {
+	return actors.begin();
+}
+
+std::list<Actor*>::iterator Engine::actorsEnd() {
+	return actors.end();
+}
+
+void Engine::moveActor(Actor* actor, int x, int y) {
+	removeActorFromPos(actor);	// remove from old position
+	addActorToPos(actor, x,y);		// place at new position
+}
+
+void Engine::removeActorFromPos(Actor* actor) {
+	// remove the actor from actorsAt
+	actorsAt[Point(actor->x, actor->y)].remove(actor);
+	// remove the actor from the map
+	map->removeActor(actor);
+}
+
+std::list<Actor*>::iterator Engine::removeActor(std::list<Actor*>::iterator iterator, bool destroy) {
+	Actor* actor = *iterator;
+	// remove the actor from actorsAt
+	removeActorFromPos(actor);
+	// remove from actors
+	iterator = actors.erase(iterator);
+	iterator--;
+	// if the actor isn't supposed to be stored elsewhere it needs to be deleted
+	if (destroy) delete actor;
+	return iterator; // returns an iterator that, when incremented, delivers the next actor in line
+}
+
+void Engine::removeActor(Actor* actor, bool destroy) {
+	// remove the actor from actorsAt
+	removeActorFromPos(actor);
+	// remove from actors
+	actors.remove(actor);
+	// if the actor isn't supposed to be stored elsewhere it needs to be deleted
+	if (destroy) delete actor;
+}
+
+void Engine::addActorToPos(Actor* actor, int x, int y) {
+	// (default is -1), so the default is to place the actor at its (internal) position
+	// if not, then place the actor at the specified position
+	if (x == -1) x = actor->x; else actor->x = x;
+	if (y == -1) y = actor->y; else actor->y = y;
+	// add it at the new position
+	actorsAt[Point(x,y)].push(actor);
+	// add the actor to the map
+	map->addActor(actor);
+}
+
+void Engine::addActor(Actor* actor, int x, int y) {
+	actors.push_back(actor);
+	addActorToPos(actor,x,y);
+}
+
+int Engine::totalActors() const {
+	return actors.size();
+}
+
+
+Actor* Engine::getClosestMonster(bool fovRequired, int x, int y, float range) {
 	Actor* closest = NULL;
 	float bestDistance = 1E6f;
-	for (Actor** iterator=actors.begin();iterator != actors.end(); iterator++) {
-		Actor* actor = *iterator;
+	for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
+		Actor* actor = *it;
 		if ( actor != player && actor->destructible && !actor->destructible->isDead() ) {
 			float distance = actor->getDistance(x,y);
 			if ( distance < bestDistance && ( distance <= range || range == 0.0f) &&
@@ -165,7 +236,8 @@ bool Engine::pickATile(int* x, int* y, float maxRange) {
 	return false;
 }
 
-Actor* Engine::getActor(int x, int y, bool aliveRequired) const {
+Actor* Engine::getActor(int x, int y, bool aliveRequired) {
+	/*
 	for (Actor** it = actors.begin(); it != actors.end(); it++) {
 		Actor* actor = *it;
 		if ( actor->x == x && actor->y == y && ( !aliveRequired ||
@@ -173,16 +245,39 @@ Actor* Engine::getActor(int x, int y, bool aliveRequired) const {
 			return actor;
 		}
 	}
+	return NULL;*/
+
+	TCODList<Actor*>& list = actorsAt[Point(x,y)];
+	for (Actor** it = list.begin(); it != list.end(); it++) {
+		Actor* actor = *it;
+		if ( !aliveRequired || (actor->destructible && !actor->destructible->isDead()) ) {
+			return actor;
+		}
+	}
 	return NULL;
+
+
 }
 
-TCODList<Actor*> Engine::getActors(int x, int y, bool aliveRequired) const {
+TCODList<Actor*> Engine::getActors(int x, int y, bool aliveRequired) {
+	/*
 	TCODList<Actor*> list;
 	for (Actor** it = actors.begin(); it != actors.end(); it++) {
 		Actor* actor = *it;
 		if ( actor->x == x && actor->y == y && ( !aliveRequired ||
 			(actor->destructible && !actor->destructible->isDead()) ) ) {
 			list.push(actor);
+		}
+	}
+	return list;*/
+
+	TCODList<Actor*> list = actorsAt[Point(x,y)];
+	if (aliveRequired) {
+		for (Actor** it = list.begin(); it != list.end(); it++) {
+			Actor* actor = *it;
+			if ( !actor->destructible || actor->destructible->isDead() ) {
+				it = list.remove(it);
+			}
 		}
 	}
 	return list;
@@ -193,6 +288,7 @@ void Engine::changeChunk(int dx, int dy, int dz) {
 
 	if ( dz == 1 )
 		gui->message(TCODColor::red,"You descend\ndeeper into the heart of the dungeon...");
+
 	depth += dz;
 	x += dx;
 	y += dy;
@@ -209,6 +305,7 @@ void Engine::changeChunk(int dx, int dy, int dz) {
 	gameStatus = STARTUP;
 
 	// try to place stairs at the players position (for logical reasons)
+	/*
 	if ( dz != 0 ) {
 		for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
 			if ( (dz == 1  && (*it)->ch == '<') ||
@@ -226,7 +323,25 @@ void Engine::changeChunk(int dx, int dy, int dz) {
 				break;
 			}
 		}
+	}*/
+	if ( dz != 0 ) {
+		for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
+			Actor* actor = *it;
+			if ( (dz == 1  && actor->ch == '<') ||
+				 (dz == -1 && actor->ch == '>') )
+			{
+				// if the new map is persistent then the player has to be placed
+				// at the stairs (instead of the other way around)
+				if ( curCh->persistentMap ) {
+					moveActor(player, actor->x, actor->y);
+				} else {
+					moveActor(actor, player->x, player->y);
+				}
+				break;
+			}
+		}
 	}
+
 }
 
 void Engine::gameMenu() {

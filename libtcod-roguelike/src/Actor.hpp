@@ -6,6 +6,7 @@ public:
 	TCODColor col;	// color
 	char name [ MAX_NAME_LENGTH ]; // the actor's name
 	bool blocks;		// can we walk on this actor?
+	bool transparent;	// can we see through this actor?
 	bool fovOnly;		// only display when in fov
 	Attacker* attacker; // something that deals damage
 	Destructible* destructible; // something that can be damaged
@@ -23,7 +24,9 @@ public:
 	void update();
 	void render() const;
 	float getDistance(int cx, int cy) const;
-	float getVolume();
+	float getVolume() const;
+	void switchBlocking();
+	void switchTransparent();
 	void load(TCODZip& zip);
 	void save(TCODZip& zip);
 };

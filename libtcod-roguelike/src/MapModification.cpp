@@ -8,16 +8,20 @@ void Map::setField(int x, int y, Map::FieldType fieldType) {
 	switch(fieldType) {
 		case GRASS :
 		case FLOOR :
-			map->setProperties(x,y,true,true);
+			tiles[x+y*width].transparent = true;
+			tiles[x+y*width].walkable = true;
 		break;
 		case TREE :
 		case WALL :
-			map->setProperties(x,y,false,false);
+			tiles[x+y*width].transparent = false;
+			tiles[x+y*width].walkable = false;
 		break;
 
 		default:
 		break;
 	}
+	computeTCODMapAt(x,y);
+	computeTileMapAt(x,y);
 }
 
 void Map::setRect(int x, int y, int width0, int height0, Map::FieldType fieldType) {
@@ -72,10 +76,10 @@ void Map::dig(int x1, int y1, int x2, int y2) {
 
 bool Map::connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, int randomness, int thickness) {
 	TCODRandom* rng = TCODRandom::getInstance();
-	int xStart; int yStart;
-	if ( !randomFreeField(x1,y1, width1,height1, &xStart,&yStart, true) ) return false;
-	int xEnd; int yEnd;
-	if ( !randomFreeField(x2,y2, width2,height2, &xEnd,&yEnd, true) ) return false;
+	int xStart=x1; int yStart=y1;
+	//if ( !randomFreeField(x1,y1, width1,height1, &xStart,&yStart, true) ) return false;
+	int xEnd=x2; int yEnd=y2;
+	//if ( !randomFreeField(x2,y2, width2,height2, &xEnd,&yEnd, true) ) return false;
 
 	int x=xStart; int y=yStart;
 	while ( x!=xEnd || y!=yEnd ) {

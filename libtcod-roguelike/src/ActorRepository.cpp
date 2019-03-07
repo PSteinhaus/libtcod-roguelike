@@ -27,14 +27,17 @@ Actor* ActorRep::getActor(ActorRep::Name name, int x, int y) {
 		case DOWNSTAIRS:
 			actor = new Actor(x,y,'>',"downstairs",TCODColor::white);
 			actor->fovOnly = false;
+			actor->blocks = false;
 		break;
 		case UPSTAIRS:
 			actor = new Actor(x,y,'<',"upstairs",TCODColor::white);
 			actor->fovOnly = false;
+			actor->blocks = false;
 		break;
 		case DOOR:
 			actor = new Actor(x,y,'+',"door",TCODColor::darkerOrange);
 			actor->fovOnly = false;
+			actor->transparent = false;
 			actor->interactable = new Useable(
 				new TargetSelector(TargetSelector::EFFECT_CARRIER,0),
 				new DoorEffect( actor->ch ) );

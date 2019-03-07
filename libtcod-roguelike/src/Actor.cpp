@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-Actor::Actor(int x, int y, int ch, const char* name, const TCODColor &col, float volume, float weight) : x(x), y(y), ch(ch), col(col), blocks(true), fovOnly(true),
+Actor::Actor(int x, int y, int ch, const char* name, const TCODColor &col, float volume, float weight) : x(x), y(y), ch(ch), col(col), blocks(true), transparent(true), fovOnly(true),
 attacker(NULL),destructible(NULL),ai(NULL),pickable(NULL),container(NULL),stomach(NULL),interactable(NULL), volume(volume),weight(weight),actorRepName(ActorRep::NONE) {
 	strcpy(this->name, name);
 }
@@ -31,9 +31,19 @@ float Actor::getDistance(int cx, int cy) const {
 	return sqrt(dx*dx + dy*dy);
 }
 
-float Actor::getVolume() {
+float Actor::getVolume() const {
 	float totalVolume = volume;
 	if ( container )	totalVolume += container->getVolume();
 	if ( stomach )		totalVolume += stomach->getVolume();
 	return totalVolume;
+}
+
+void Actor::switchBlocking() {
+	blocks = !blocks;
+	engine.map->computeTCODMapAt(x,y);
+}
+
+void Actor::switchTransparent() {
+	transparent = !transparent;
+	engine.map->computeTCODMapAt(x,y);
 }

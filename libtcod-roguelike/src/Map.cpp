@@ -124,7 +124,7 @@ void Map::addMonster(int x, int y) {
 			name = it->first;										//
 		}
 		it->second--;												// load OFF the biomeData
-		engine.actors.push( ActorRep::getActor(name, x,y) );		// place into the map (or engine as of now)
+		engine.addActor( ActorRep::getActor(name, x,y) );		// place into the map (or engine as of now)
 	}
 }
 
@@ -134,13 +134,41 @@ void Map::addItem(int x, int y) {
 	*/
 }
 
+void Map::addActor(Actor* actor) {
+	computeTCODMapAt(actor->x,actor->y);
+}
+
+void Map::removeActor(Actor* actor) {
+	computeTCODMapAt(actor->x,actor->y);
+}
+
+void Map::computeTCODMapAt(int x, int y) {
+	// first check tile
+	bool transparent = tiles[x+width*y].transparent;
+	bool walkable = tiles[x+width*y].walkable;
+	// then the actors
+	TCODList<Actor*> list = engine.getActors(x,y,false);
+	for( Actor** it=list.begin(); it!=list.end(); it++ ) {
+		if (walkable==false && transparent==false) break;
+		Actor* actor = *it;
+		if ( actor->blocks ) walkable = false;
+		if ( !actor->transparent ) transparent = false;
+	}
+	map->setProperties(x,y, transparent,walkable);
+}
+
+void Map::computeTileMapAt(int x, int y) {
+	bool transparent = tiles[x+width*y].transparent;
+	bool walkable = tiles[x+width*y].walkable;
+	tileMap->setProperties(x,y, transparent, walkable);
+}
+
 void Map::fillRoom(int x1, int y1, int x2, int y2, bool first=false) {
 	TCODRandom* rng = TCODRandom::getInstance();
 	int x,y;
 	if ( first ) {
 		// put the player in the first room
-		engine.player->x = (x1+x2)/2;
-		engine.player->y = (y1+y2)/2;
+		engine.moveActor(engine.player, (x1+x2)/2,(y1+y2)/2 );
 	} else {
 		int nbMonsters = rng->getInt(0,MAX_ROOM_MONSTERS);
 		while ( nbMonsters > 0 ) {
@@ -165,6 +193,7 @@ void Map::fillRoom(int x1, int y1, int x2, int y2, bool first=false) {
 Map::Map(int width, int height, Chunk* chunk) : width(width), height(height), chunk(chunk) {
 	tiles = new Tile[width*height];
 	map = new TCODMap(width,height);
+	tileMap = new TCODMap(width,height);
 }
 
 Map::~Map() {
@@ -188,12 +217,12 @@ void Map::init() {
 		case Chunk::WITCH_HUT :
 			fill(FieldType::TREE);
 			setEllipseGrad(1,1, width-2,height-2, 0.5, FieldType::GRASS);
-			engine.actors.push( ActorRep::getActor( ActorRep::Name::DOWNSTAIRS, (width/2)+9,(height/2)-5 ) );
+			engine.addActor( ActorRep::getActor( ActorRep::Name::DOWNSTAIRS, (width/2)+9,(height/2)-5 ) );
 			// build witch-hut
 			setRect( (width/2)-3,(height/2)-2, 6,5, FieldType::WALL );
 			setRect( (width/2)-2,(height/2)-1, 4,3, FieldType::FLOOR );
 			setField( (width/2),(height/2)-2, FieldType::FLOOR );
-			engine.actors.push( ActorRep::getActor( ActorRep::Name::DOOR, (width/2),(height/2)-2 ) );
+			engine.addActor( ActorRep::getActor( ActorRep::Name::DOOR, (width/2),(height/2)-2 ) );
 
 		break;
 
@@ -241,13 +270,13 @@ void Map::init() {
 			}
 
 			// connect them
+			
 			switch(chunk->terrainData.tunnelCreation) {
 				case TD::TunnelCreation::RANDOM:
 				{
 					listener.state = BspListener::CONNECT_RND;
-					TCODPath path = TCODPath(map);
+					TCODPath path = TCODPath(tileMap);
 					bsp.traverseInvertedLevelOrder(&listener,&path);
-					// (add stairs)
 				}
 				break;
 				default:
@@ -256,14 +285,15 @@ void Map::init() {
 
 			// add stairs
 			{
+				printf("stairs added\n");
 				int x, y;
 				for(int i=0; i<chunk->terrainData.numDownStairs; i++) {
 					randomFreeField(0,0,width,height, &x,&y);
-					engine.actors.push( ActorRep::getActor( ActorRep::Name::DOWNSTAIRS, x,y ) );
+					engine.addActor( ActorRep::getActor( ActorRep::Name::DOWNSTAIRS, x,y ) );
 				}
 				for(int i=0; i<chunk->terrainData.numUpStairs; i++) {
 					randomFreeField(0,0,width,height, &x,&y);
-					engine.actors.push( ActorRep::getActor( ActorRep::Name::UPSTAIRS, x,y ) );
+					engine.addActor( ActorRep::getActor( ActorRep::Name::UPSTAIRS, x,y ) );
 				}
 			}
 		}
@@ -273,25 +303,24 @@ void Map::init() {
 void Map::leave() {
 	if ( !chunk->persistentMap ) {
 		// load off all actors back into the biomeData
-		for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
+		for (auto it=engine.actorsBegin(); it!=engine.actorsEnd(); it++) {
 			Actor* actor = *it;
 			if ( actor->actorRepName != ActorRep::NONE && actor->destructible && !actor->destructible->isDead() ) {
 				chunk->biomeData.creatures[actor->actorRepName]++;
-			}		
+			}	
 			// delete all actors but the player
 			if ( actor != engine.player ) {
-				delete *it;
-				it = engine.actors.remove(it); // removes the object *it and returns a new iterator (the previous one)
+				it = engine.removeActor(it);
 			}
 		}
 		delete this;
 	} else {
 		// load off all actors into the savedActors list
-		for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
+		for (auto it=engine.actorsBegin(); it!=engine.actorsEnd(); it++) {
 			Actor* actor = *it;
 			if ( actor != engine.player ) {
 				savedActors.push(actor);
-				it = engine.actors.remove(it); // removes the object *it and returns a new iterator (the previous one)
+				it = engine.removeActor(it, false);
 			}
 		}
 	}
@@ -299,12 +328,13 @@ void Map::leave() {
 
 // load all actors saved in the savedActors field (filled when the map is left) back into the engine
 void Map::loadSavedActors() {
-	engine.actors.addAll(savedActors);
+	for ( Actor** it=savedActors.begin(); it!=savedActors.end(); it++ )
+		engine.addActor(*it);
 	savedActors.clear();
 }
 
 bool Map::isWall(int x, int y) const {
-	return !map->isWalkable(x,y);
+	return !tiles[x+width*y].walkable;
 }
 
 bool Map::inMap(int x, int y, bool includeBorders) const {
@@ -315,16 +345,19 @@ bool Map::inMap(int x, int y, bool includeBorders) const {
 }
 
 bool Map::canWalk(int x, int y) const {
-	if (isWall(x,y)) return false;
-	for (Actor** iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
+	return map->isWalkable(x,y);
+	/*
+	for (Actor** iterator = engine.getActors(x,y).begin(); iterator != engine.actors.end(); iterator++) {
 		Actor* actor = *iterator;
 		if ( actor->blocks && actor->x == x && actor->y == y ) {
 			// there is a blocking actor there. cannot walk
 			return false;
 		}
 	}
-	return true;
+	return true;*/
 }
+
+Map::FieldType Map::fieldTypeAt(int x, int y) const { return tiles[x+y*width].fieldType; }
 
 bool Map::isExplored(int x, int y) const {
 	return tiles[x+y*width].explored;
@@ -349,16 +382,16 @@ bool Map::randomFreeField(int x0, int y0, int width0, int height0 ,int* x, int* 
 		*x = rng->getInt( x0, x0+width0-1 );
 		*y = rng->getInt( y0, y0+height0-1 );
 		tries++;
-	} while ( !( (!wall && canWalk(*x,*y)) || (wall && map->isWalkable(*x,*y)) ) && tries < width0*height0*width0*height0 );
-	if ( !( (!wall && canWalk(*x,*y)) || (wall && map->isWalkable(*x,*y)) ) ) { // simply go through all fields and take the first free one
+	} while ( !( (!wall && canWalk(*x,*y)) || (wall && tiles[*x+*y*width].walkable) ) && tries < width0*height0*width0*height0 );
+	if ( !( (!wall && canWalk(*x,*y)) || (wall && tiles[*x+*y*width].walkable) ) ) { // simply go through all fields and take the first free one
 		for(int i=0; i<width0; i++)
 			for(int j=0; j<height0; j++) {
 				*x = i;
 				*y = j;
-				if ( (!wall && canWalk(*x,*y)) || (wall && map->isWalkable(*x,*y)) ) break;
+				if ( (!wall && canWalk(*x,*y)) || (wall && tiles[*x+*y*width].walkable) ) break;
 			}
 	}
-	return ( (!wall && canWalk(*x,*y)) || (wall && map->isWalkable(*x,*y)) );
+	return ( (!wall && canWalk(*x,*y)) || (wall && tiles[*x+*y*width].walkable) );
 }
 
 void Map::render() const {

@@ -1,5 +1,6 @@
 #include "main.hpp"
 #include <math.h>
+#include <stdio.h>
 
 // how many turns the monster chases the player after losing his sight
 static const int TRACKING_TURNS = 5;
@@ -30,14 +31,13 @@ void PlayerAi::update(Actor* owner) {
 
 bool PlayerAi::interactAt(Actor* owner, int targetX, int targetY) {
 	// look for living actors to attack or interact with
-	for (Actor** iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
+	TCODList<Actor*> list = engine.getActors(targetX, targetY, false);
+	for (Actor** iterator = list.begin(); iterator != list.end(); iterator++) {
 		Actor* actor = *iterator;
-		if ( actor->x == targetX && actor->y == targetY ) {
-			if ( actor->interactable ) {
-				// if this actor can be interacted with interact with it
-				actor->interactable->use(actor,owner);
-				return true;
-			}
+		if ( actor->interactable ) {
+			// if this actor can be interacted with interact with it
+			actor->interactable->use(actor,owner);
+			return true;
 		}
 	}
 	return false;
@@ -46,34 +46,27 @@ bool PlayerAi::interactAt(Actor* owner, int targetX, int targetY) {
 bool PlayerAi::moveOrAttack(Actor* owner, int targetX, int targetY) {
 	if ( engine.map->isWall(targetX,targetY) ) return false;
 	// look for living actors to attack or interact with
-	for (Actor** iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
+	TCODList<Actor*> list = engine.getActors(targetX, targetY, false);
+	for (Actor** iterator = list.begin(); iterator != list.end(); iterator++) {
 		Actor* actor = *iterator;
-		if ( actor->x == targetX && actor->y == targetY ) {
-			if ( actor->interactable && ( !actor->destructible || actor->destructible->isDead() ) && actor->blocks ) {
-				// if this actor can be interacted with, blocks, and cannot (or should not) be attacked, interact with it
-				actor->interactable->use(actor,owner);
-				return false;
-			}
-			else if ( actor->destructible && !actor->destructible->isDead() ) {
-				owner->attacker->attack(owner, actor);
-				return false;
-			}
+		if ( actor->interactable && ( !actor->destructible || actor->destructible->isDead() ) && actor->blocks ) {
+			// if this actor can be interacted with, blocks, and cannot (or should not) be attacked, interact with it
+			actor->interactable->use(actor,owner);
+			return false;
+		}
+		else if ( actor->destructible && !actor->destructible->isDead() ) {
+			owner->attacker->attack(owner, actor);
+			return false;
 		}
 	}
-	// look for corpses or items
-	for (Actor** iterator=engine.actors.begin();
-		iterator != engine.actors.end(); iterator++)
+	// look for actors at the new position
+	for (Actor** iterator=list.begin(); iterator != list.end(); iterator++)
 	{
 		Actor* actor=*iterator;
-		bool corpseOrItem = (actor->destructible && actor->destructible->isDead()) || actor->pickable;
-		if ( corpseOrItem
-			&& actor->x == targetX && actor->y == targetY )
-		{
-			engine.gui->message(TCODColor::white, "There's a %s here",actor->name);
-		}
+		engine.gui->message(TCODColor::white, "There's a %s here",actor->name);
 	}
-	owner->x = targetX;
-	owner->y = targetY;
+	// move the player
+	engine.moveActor(owner, targetX,targetY);
 	return true;
 }
 
@@ -82,9 +75,10 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 		case 'g' : // pickup item
 		{
 			Actor* topItem = NULL;
-			for (Actor** iterator = engine.actors.begin(); iterator != engine.actors.end(); iterator++) {
-				Actor* actor = *iterator;
-				if ( actor->pickable && actor->x == owner->x && actor->y == owner->y ) {
+			TCODList<Actor*> list = engine.getActors(owner->x, owner->y, false);
+			for (Actor** it = list.begin(); it != list.end(); it++) {
+				Actor* actor = *it;
+				if ( actor->pickable ) {
 					topItem = actor;
 				}
 			}
@@ -128,17 +122,18 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 		}
 		break;
 		case '<' :
+			TCODList<Actor*> list = engine.getActors(owner->x, owner->y, false);
 			if ( engine.lastKey.shift ) {
-				for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
-					if ( (*it)->ch == '>' && (*it)->x == owner->x && (*it)->y == owner->y ) {
+				for (Actor** it = list.begin(); it != list.end(); it++) {
+					if ( (*it)->ch == '>' ) {
 						engine.changeChunk(0,0,1);
 						return;
 					}
 				}
 				engine.gui->message(TCODColor::lightGrey,"There are no downstairs here.");
 			} else {
-				for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
-					if ( (*it)->ch == '<' && (*it)->x == owner->x && (*it)->y == owner->y ) {
+				for (Actor** it = list.begin(); it != list.end(); it++) {
+					if ( (*it)->ch == '<' ) {
 						engine.changeChunk(0,0,-1);
 						return;
 					}
@@ -202,22 +197,23 @@ void MonsterAi::update(Actor* owner) {
 void MonsterAi::moveOrAttack(Actor* owner, int targetX, int targetY) {
 	int dx = targetX - owner->x;
 	int dy = targetY - owner->y;
-	int stepdx = (dx > 0 ? 1:-1);
-	int stepdy = (dy > 0 ? 1:-1);
+	int stepdx = (dx > 0 ? 1: dx < 0 ? -1 : 0);
+	int stepdy = (dy > 0 ? 1: dy < 0 ? -1 : 0);
 	float distance = sqrt(dx*dx + dy*dy);
 	if ( distance >= 2 ) {
 		dx = (int)(round(dx/distance));
 		dy = (int)(round(dy/distance));
 	}
 	if ( engine.map->canWalk(owner->x+dx, owner->y+dy) ) {
-			owner->x += dx;
-			owner->y += dy;
+		engine.moveActor(owner, owner->x+dx, owner->y+dy);
 	} else if ( owner->attacker && distance < 2 ) {
 		owner->attacker->attack(owner, engine.player);
+	} else if ( engine.map->canWalk(owner->x+stepdx,owner->y+stepdy) ) {
+		engine.moveActor(owner, owner->x+stepdx,owner->y+stepdy);
 	} else if ( engine.map->canWalk(owner->x+stepdx,owner->y) ) {
-		owner->x += stepdx;
+		engine.moveActor(owner, owner->x+stepdx,owner->y);
 	} else if ( engine.map->canWalk(owner->x, owner->y+stepdy) ) {
-		owner->y += stepdy;
+		engine.moveActor(owner, owner->x,owner->y+stepdy);
 	}
 }
 
@@ -235,8 +231,7 @@ void ConfusedMonsterAi::update(Actor* owner) {
 		int destX = owner->x+dx;
 		int destY = owner->y+dy;
 		if ( engine.map->canWalk(destX,destY) ) {
-			owner->x = destX;
-			owner->y = destY;
+			engine.moveActor(owner, destX,destY);
 		} else {
 			Actor* actor = engine.getActor(destX,destY);
 			if ( actor && owner->attacker ) {

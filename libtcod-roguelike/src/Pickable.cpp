@@ -11,7 +11,7 @@ Pickable::~Pickable() {
 
 bool Pickable::pick(Actor* owner, Actor* picker) {
 	if ( picker->container && picker->container->add(owner) ) {
-		engine.actors.remove(owner);
+		engine.removeActor(owner, false);
 		return true;
 	}
 	return false;
@@ -28,9 +28,8 @@ bool Pickable::use(Actor* owner, Actor* user) {
 void Pickable::drop(Actor* owner, Actor* carrier) {
 	if ( carrier->container ) {
 		carrier->container->remove(owner);
-		engine.actors.insertBefore(owner, 0);
-		owner->x = carrier->x;
-		owner->y = carrier->y;
+		engine.addActor(owner, carrier->x, carrier->y);
+		engine.sendToBack(owner);
 		if (carrier == engine.player) engine.gui->message(TCODColor::lightGrey,
 			"You drop the %s.", owner->name);
 		else engine.gui->message(TCODColor::lightGrey,"%s drops a %s.",
@@ -41,9 +40,8 @@ void Pickable::drop(Actor* owner, Actor* carrier) {
 void Pickable::vomit(Actor* owner, Actor* carrier) {
 	if ( carrier->stomach ) {
 		carrier->stomach->remove(owner);
-		engine.actors.insertBefore(owner, 0);
-		owner->x = carrier->x;
-		owner->y = carrier->y;
+		engine.addActor(owner, carrier->x, carrier->y);
+		engine.sendToBack(owner);
 		owner->col = TCODColor::lightGreen;
 		if (carrier == engine.player) engine.gui->message(TCODColor::lightGreen, "You vomit.");
 		else engine.gui->message(TCODColor::lightGreen,"The %s vomits.", carrier->name);

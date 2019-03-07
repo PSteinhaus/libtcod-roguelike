@@ -58,8 +58,8 @@ void Engine::save() {
 		zip.putInt(map->height);
 		map->save(zip);
 		// then all the other actors
-		zip.putInt(actors.size()-1);
-		for (Actor** it=actors.begin(); it!=actors.end(); it++) {
+		zip.putInt(totalActors()-1);
+		for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
 			if ( *it != player ) {
 				(*it)->save(zip);
 			}
@@ -83,7 +83,6 @@ void Engine::load() {
 	// load the player
 	player = new Actor(0,0,0,"",TCODColor::white);
 	player->load(zip);
-	actors.push(player);
 	// then some engine data
 	x = zip.getInt();
 	y = zip.getInt();
@@ -98,9 +97,10 @@ void Engine::load() {
 	while ( nbActors > 0 ) {
 		Actor* actor = new Actor(0,0,0,"",TCODColor::white);
 		actor->load(zip);
-		actors.push(actor);
+		addActor(actor);
 		nbActors--;
 	}
+	addActor(player);
 	// the message log
 	gui->load(zip);
 	// and finally THE WORLD!
@@ -219,17 +219,26 @@ void Map::load(TCODZip& zip) {
 		savedActors.push(actor);
 		nbActors--;
 	}
+	// recalculate tileMap
+	for (int x = 0; x < width; x++)
+		for (int y = 0; y < height; y++) {
+			computeTileMapAt(x,y);
+		}
 }
 
 void Tile::save(TCODZip& zip) {
 	//bitArray.save(zip, explored);
 	zip.putInt(explored);
+	zip.putInt(transparent);
+	zip.putInt(walkable);
 	zip.putInt( (int)fieldType );
 }
 
 void Tile::load(TCODZip& zip) {
 	//explored = bitArray.load(zip);
 	explored = (bool)zip.getInt();
+	transparent = (bool)zip.getInt();
+	walkable = (bool)zip.getInt();
 	fieldType = (Map::FieldType)zip.getInt();
 }
 
