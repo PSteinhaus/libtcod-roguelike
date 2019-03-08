@@ -1,12 +1,13 @@
 #include "main.hpp"
 
-Pickable::Pickable() : useable(NULL) {
+Pickable::Pickable() : useable(NULL), equipable(NULL) {
 	digestor = NULL;
 }
 
 Pickable::~Pickable() {
 	if ( useable ) delete useable;
 	if ( digestor ) delete digestor;
+	if ( equipable ) delete equipable;
 }
 
 bool Pickable::pick(Actor* owner, Actor* picker) {

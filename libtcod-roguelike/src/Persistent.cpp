@@ -8,7 +8,6 @@
 #endif
 
 #include "main.hpp"
-#include <map>
 
 // it's not yet sure whether using BitArrays will have any advantage because of the final compression
 static BitArray bitArray;
@@ -567,4 +566,56 @@ Ai* Ai::create(TCODZip& zip) {
 	}
 	ai->load(zip);
 	return ai;
+}
+
+void Equipable::save(TCODZip &zip) {
+	zip.putInt( (int)slotNeeded );
+	zip.putInt( !!equipEffect );
+	if ( equipEffect ) equipEffect->save(zip);
+	zip.putInt( !!unequipEffect );
+	if ( unequipEffect ) unequipEffect->save(zip);
+}
+
+void Equipable::load(TCODZip &zip) {
+	slotNeeded = (BodyPart::EquipmentSlot)zip.getInt();
+	if ( zip.getInt() ) equipEffect = Effect::create(zip);
+	if ( zip.getInt() ) unequipEffect = Effect::create(zip);
+}
+
+void Body::save(TCODZip &zip) {
+	zip.putInt(parts.size());
+	for ( auto it=parts.begin(); it!=parts.end(); ++it ) {
+		(*it)->save(zip);
+	}
+}
+
+void Body::load(TCODZip &zip) {
+	parts.clearAndDelete();
+	for ( int numParts=zip.getInt(); numParts>0; --numParts ) {
+		BodyPart* part = new BodyPart();
+		part->load(zip);
+		parts.push(part);
+	}
+}
+
+void BodyPart::save(TCODZip &zip) {
+	zip.putInt(slots.size());
+	for ( auto it=slots.begin(); it!=slots.end(); ++it ) {
+		auto slot = *it;
+		zip.putInt( (int)slot.first );
+		zip.putInt( !!slot.second );
+		if ( slot.second ) slot.second->save(zip);
+	}
+}
+
+void BodyPart::load(TCODZip &zip) {
+	for ( int numSlots=zip.getInt(); numSlots>0; --numSlots ) {
+		auto slot = std::pair<EquipmentSlot,Actor*> {};
+		slot.first = (EquipmentSlot)zip.getInt();
+		if ( zip.getInt() ) {
+			slot.second = new Actor();
+			slot.second->load(zip);
+		}
+		slots.push_back(slot);
+	}
 }

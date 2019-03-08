@@ -1,20 +1,3 @@
-#include <tuple>
-#include <map>
-#include <list>
-
-typedef std::pair<int,int> Point;
-/*
-class ActorIterator {
-public:
-	ActorIterator(bool begin=true);
-	ActorIterator& operator++ ();     // prefix ++
-	Actor* actor();
-
-private:
-	std::map< Point, TCODList<Actor*> >::iterator itWorld;
-	Actor** it;
-};
-*/
 class Engine
 {
 public :

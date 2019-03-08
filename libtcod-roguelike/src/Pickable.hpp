@@ -18,6 +18,7 @@ class Pickable : public Persistent
 public:
 	Useable* useable;
 	Digestor* digestor;
+	Equipable* equipable;
 
 	Pickable();
 	virtual ~Pickable();
