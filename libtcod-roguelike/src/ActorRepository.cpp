@@ -39,7 +39,7 @@ Actor* ActorRep::getActor(ActorRep::Name name, int x, int y) {
 			actor->fovOnly = false;
 			actor->transparent = false;
 			actor->interactable = new Useable(
-				new TargetSelector(TargetSelector::EFFECT_CARRIER,0),
+				new SelectEffectCarrier(),
 				new DoorEffect( actor->ch ) );
 		break;
 		default:;
@@ -61,7 +61,7 @@ Actor* LightningScroll(int x, int y) {
 	item->blocks = false;
 	item->pickable = new Pickable();
 	item->pickable->useable = new Useable(
-		new TargetSelector(TargetSelector::CLOSEST_MONSTER,5),
+		new SelectClosestMonster(5),
 		new HealthEffect(-20,"A lighting bolt strikes the %s with a loud thunder!\nThe damage is %g hit points.") );
 	return item;
 }
@@ -71,7 +71,7 @@ Actor* FireballScroll(int x, int y) {
 	item->blocks = false;
 	item->pickable = new Pickable();
 	item->pickable->useable = new Useable(
-		new TargetSelector(TargetSelector::SELECTED_RANGE,5,3),
+		new SelectFieldRange(5,3),
 		new HealthEffect(-12,"The %s gets burned for %g hit points.") );
 	return item;
 }
@@ -80,8 +80,10 @@ Actor* ConfusionScroll(int x, int y) {
 	Actor *item = new Actor(x,y,'?',"scroll of confusion",TCODColor::lightYellow);
 	item->blocks = false;
 	item->pickable = new Pickable();
+	auto selector = new SelectField(5);
+	selector->aliveRequired = true;
 	item->pickable->useable = new Useable(
-		new TargetSelector(TargetSelector::SELECTED_MONSTER,5),
+		selector,
 		new ConfusionEffect(8,"The eyes of the %s look vacant,\nas he starts to stumble around!") );
 	return item;
 }

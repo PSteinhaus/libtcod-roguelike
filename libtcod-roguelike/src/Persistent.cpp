@@ -441,23 +441,85 @@ void Useable::save(TCODZip& zip) {
 
 void Useable::load(TCODZip& zip) {
 	if ( zip.getInt() ) {
-		selector =	new TargetSelector(TargetSelector::CLOSEST_MONSTER,0);
-		selector->load(zip);
+		selector =	TargetSelector::create(zip);
 	}
 	effect =	Effect::create(zip);
 	destroyWhenEmpty = zip.getInt();
 }
 
 void TargetSelector::save(TCODZip& zip) {
-	zip.putInt((int)type);
+	zip.putInt((int)selectorType);
+}
+
+TargetSelector* TargetSelector::create(TCODZip& zip) {
+	SelectorType type = (SelectorType)zip.getInt();
+	TargetSelector* selector = NULL;
+	switch(type) {
+		case CLOSEST_MONSTER : selector = new SelectClosestMonster(); break;
+		case SELECTED_MONSTER : selector = new SelectField(); break;
+		case USER_RANGE : selector = new RangeAroundUser(); break;
+		case SELECTED_RANGE : selector = new SelectFieldRange(); break;
+		case EFFECT_CARRIER : selector = new SelectEffectCarrier(); break;
+		case NUMPAD : selector = new SelectNumpadAdjecent(); break;
+	}
+	selector->load(zip);
+	return selector;
+}
+
+void SelectClosestMonster::save(TCODZip& zip) {
+	TargetSelector::save(zip);
+	zip.putFloat(range);
+}
+
+void SelectClosestMonster::load(TCODZip& zip) {
+	range = zip.getFloat();
+}
+
+void SelectField::save(TCODZip& zip) {
+	TargetSelector::save(zip);
+	zip.putFloat(range);
+}
+
+void SelectField::load(TCODZip& zip) {
+	range = zip.getFloat();
+}
+
+void RangeAroundUser::save(TCODZip& zip) {
+	TargetSelector::save(zip);
+	zip.putFloat(range);
+	zip.putInt(includeUser);
+}
+
+void RangeAroundUser::load(TCODZip& zip) {
+	range = zip.getFloat();
+	includeUser = zip.getInt();
+}
+
+void SelectFieldRange::save(TCODZip& zip) {
+	TargetSelector::save(zip);
 	zip.putFloat(range);
 	zip.putFloat(areaRange);
 }
 
-void TargetSelector::load(TCODZip& zip) {
-	type = (SelectorType)zip.getInt();
+void SelectFieldRange::load(TCODZip& zip) {
 	range = zip.getFloat();
 	areaRange = zip.getFloat();
+}
+
+void SelectEffectCarrier::save(TCODZip& zip) {
+	TargetSelector::save(zip);
+}
+
+void SelectEffectCarrier::load(TCODZip& zip) {
+}
+
+void SelectNumpadAdjecent::save(TCODZip& zip) {
+	TargetSelector::save(zip);
+	zip.putInt(acceptCenter);
+}
+
+void SelectNumpadAdjecent::load(TCODZip& zip) {
+	acceptCenter = zip.getInt();
 }
 
 // Effects
@@ -574,12 +636,14 @@ void Equipable::save(TCODZip &zip) {
 	if ( equipEffect ) equipEffect->save(zip);
 	zip.putInt( !!unequipEffect );
 	if ( unequipEffect ) unequipEffect->save(zip);
+	zip.putInt( implicitlyUseable );
 }
 
 void Equipable::load(TCODZip &zip) {
 	slotNeeded = (BodyPart::EquipmentSlot)zip.getInt();
 	if ( zip.getInt() ) equipEffect = Effect::create(zip);
 	if ( zip.getInt() ) unequipEffect = Effect::create(zip);
+	implicitlyUseable = zip.getInt();
 }
 
 void Body::save(TCODZip &zip) {

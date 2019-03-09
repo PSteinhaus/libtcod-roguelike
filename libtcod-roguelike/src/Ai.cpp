@@ -30,6 +30,18 @@ void PlayerAi::update(Actor* owner) {
 }
 
 bool PlayerAi::interactAt(Actor* owner, int targetX, int targetY) {
+	// first try to directly use your equipment
+	if(owner->body)
+	for ( auto it=owner->body->parts.begin(); it!=owner->body->parts.end(); ++it )
+		for ( auto slotIt=(*it)->slots.begin(); slotIt!=(*it)->slots.end(); ++slotIt ) {
+			auto slot = *slotIt;
+			if ( slot.second ) {
+				Actor* actor = slot.second;
+				if ( actor->pickable->useable &&
+					 actor->pickable->equipable->implicitlyUseable &&
+					 actor->pickable->useable->use(actor, owner, true) ) return true;
+			}
+		}
 	// look for living actors to attack or interact with
 	TCODList<Actor*> list = engine.getActors(targetX, targetY, false);
 	for (Actor** iterator = list.begin(); iterator != list.end(); iterator++) {

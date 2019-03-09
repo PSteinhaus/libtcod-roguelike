@@ -1,7 +1,7 @@
 #include "main.hpp"
 
 Equipable::Equipable(BodyPart::EquipmentSlot slotNeeded, Effect* equipEffect, Effect* unequipEffect) :
-slotNeeded(slotNeeded), equipEffect(equipEffect), unequipEffect(unequipEffect)
+implicitlyUseable(false), slotNeeded(slotNeeded), equipEffect(equipEffect), unequipEffect(unequipEffect)
 {}
 
 Equipable::~Equipable() {

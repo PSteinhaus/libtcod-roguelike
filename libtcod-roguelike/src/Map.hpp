@@ -1,5 +1,3 @@
-class Tile;
-
 class Map : public Persistent
 {
 public:
@@ -20,6 +18,7 @@ public:
 	bool inMap(int x, int y, bool includeBorders=true) const;
 	bool isWall(int x, int y) const;
 	inline FieldType fieldTypeAt(int x, int y) const;
+	Tile* tileAt(int x, int y) const;
 	bool canWalk(int x, int y) const;
 	void render() const;
 	void addMonster(int x, int y);
@@ -51,7 +50,8 @@ protected:
 	bool randomFreeField(int x0, int y0, int width, int height ,int* x, int* y, bool wall=false);
 };
 
-struct Tile : public Persistent {
+class Tile : public Persistent {
+public:
 	bool explored;	// has the player already seen this tile?
 	bool transparent;	// can the player (and possibly monsters) look through this tile?
 	bool walkable;	// can the player (and possibly monsters) walk over this tile?

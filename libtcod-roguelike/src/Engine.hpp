@@ -41,6 +41,8 @@ public :
 	void removeActorFromPos(Actor* actor);
 	void moveActor(Actor* actor, int x, int y);
 	int totalActors() const;
+	// Tiles
+	Tile* tileAt(int x, int y) const;
 
 	Actor* getClosestMonster(bool fovRequired,int x, int y, float range = 0.0f);
 	bool pickATile(int* x, int* y, float maxRange = 0.0f);
@@ -51,7 +53,9 @@ public :
 	void gameMenu();
 	Actor* getActor(int x, int y, bool aliveRequired = true);
 	TCODList<Actor*> getActors(int x, int y, bool aliveRequired = true);
+	void entitiesInRange( int x, int y, float range, bool aliveRequired, TCODList<Actor*>* list=NULL, TCODList<Tile*>* tileList=NULL );
 	inline Chunk* currentChunk() { return world[x][y][depth]; }
+	bool waitForDirection(bool acceptCenter);
 };
 
 extern Engine engine;

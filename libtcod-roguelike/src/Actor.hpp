@@ -27,6 +27,7 @@ public:
 	void render() const;
 	float getDistance(int cx, int cy) const;
 	float getVolume() const;
+	bool onActorsList() const;
 	void switchBlocking();
 	void switchTransparent();
 	void load(TCODZip& zip);

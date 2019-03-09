@@ -79,37 +79,6 @@ void Engine::render() {
 	// draw the map
 	map->render();
 	// draw the actors
-	/*
-	// draw dead non-items first
-	for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
-		Actor* actor = *it;
-		if ( !actor->destructible && !actor->pickable )
-			if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
-				|| map->isInFov(actor->x,actor->y)) )
-			{
-				actor->render();
-			}
-	}
-	// draw items
-	for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
-		Actor* actor = *it;
-		if ( actor->pickable )
-			if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
-				|| map->isInFov(actor->x,actor->y)) )
-			{
-				actor->render();
-			}
-	}
-	// draw the rest
-	for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
-		Actor* actor = *it;
-		if ( actor->destructible && !actor->pickable )
-			if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
-				|| map->isInFov(actor->x,actor->y)) )
-			{
-				actor->render();
-			}
-	}*/
 	enum DrawState { STRUCTURES, ITEMS, CREATURES, DONE } state = STRUCTURES;
 	while ( state != DONE ) {
 		for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
@@ -142,10 +111,6 @@ void Engine::render() {
 	player->render();
 	// show the player's stats
 	gui->render();
-	/*
-	TCODConsole::root->printf(1,screenHeight-2, "HP : %d/%d",
-		(int)player->destructible->hp, (int)player->destructible->maxHp);
-	*/
 }
 
 void Engine::sendToBack(Actor* actor) {
@@ -176,6 +141,8 @@ void Engine::removeActorFromPos(Actor* actor) {
 
 std::list<Actor*>::iterator Engine::removeActor(std::list<Actor*>::iterator iterator, bool destroy) {
 	Actor* actor = *iterator;
+	// set position to (-1,-1), to let the actor know it's off the actors list
+	actor->x = -1; actor->y = -1;
 	// remove the actor from actorsAt
 	removeActorFromPos(actor);
 	// remove from actors
@@ -189,6 +156,8 @@ std::list<Actor*>::iterator Engine::removeActor(std::list<Actor*>::iterator iter
 void Engine::removeActor(Actor* actor, bool destroy) {
 	// remove the actor from actorsAt
 	removeActorFromPos(actor);
+	// set position to (-1,-1), to let the actor know it's off the actors list
+	actor->x = -1; actor->y = -1;
 	// remove from actors
 	actors.remove(actor);
 	// if the actor isn't supposed to be stored elsewhere it needs to be deleted
@@ -215,6 +184,22 @@ int Engine::totalActors() const {
 	return actors.size();
 }
 
+Tile* Engine::tileAt(int x, int y) const {
+	return map->tileAt(x,y);
+}
+
+void Engine::entitiesInRange( int x0, int y0, float range, bool aliveRequired, TCODList<Actor*>* list, TCODList<Tile*>* tileList ) {
+	for ( int i=(int)-range; i<=(int)range; ++i )
+		for ( int j=(int)-range; j<=(int)range; ++j ) {
+			int x = x0 + i;
+			int y = y0 + j;
+			if(!map->inMap(x,y)) continue;
+			if ( getDistance(x0,y0, x,y) <= range ) {
+				if(list) list->addAll( getActors(x,y,aliveRequired) );
+				if(tileList) tileList->push( tileAt(x,y) );
+			}
+		}
+}
 
 Actor* Engine::getClosestMonster(bool fovRequired, int x, int y, float range) {
 	Actor* closest = NULL;
@@ -413,4 +398,14 @@ void Engine::gameMenu() {
 	} else if ( !map ) {
 		load();
 	}
+}
+
+bool Engine::waitForDirection(bool acceptCenter){
+	int x=0;
+	int y=0;
+	while ( !numpadMove(&x,&y) || (x==0 && y==0 && !acceptCenter) ) {
+		TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS, &lastKey, NULL);
+		if (lastKey.vk == TCODK_ESCAPE) return false;
+	}
+	return true;
 }

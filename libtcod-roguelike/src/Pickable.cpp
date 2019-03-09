@@ -19,7 +19,7 @@ bool Pickable::pick(Actor* owner, Actor* picker) {
 }
 
 bool Pickable::use(Actor* owner, Actor* user) {
-	if ( user->container && useable ) {
+	if ( useable ) {
 		return useable->use(owner, user);
 	}
 	engine.gui->message(TCODColor::white, "%s cannot be used", owner->name);
@@ -64,43 +64,4 @@ bool Pickable::eat(Actor* owner, Actor* eater) {
 	else if (eater == engine.player) engine.gui->message(TCODColor::lightGrey,
 		"Eating the %s would be too much for you.", owner->name);
 	return false;
-}
-
-Useable::Useable(TargetSelector *selector, Effect *effect, bool destroyWhenEmpty) : selector(selector),effect(effect),destroyWhenEmpty(destroyWhenEmpty) {
-}
-
-Useable::~Useable() {
-	if ( selector ) delete selector;
-	if ( effect ) delete effect;
-}
-
-bool Useable::use(Actor* owner, Actor* user) {
-	if ( !effect->empty ) {
-		// find targets
-		TCODList<Actor *> list;
-		if ( selector ) {
-			selector->selectTargets(user, owner, list);
-		} else {
-			list.push(user);
-		}
-		// apply effect to them
-		bool succeed=false;
-		for (Actor **it=list.begin(); it!=list.end(); it++) {
-			if ( !effect->empty ) {
-				effect->applyTo(*it);
-				succeed=true;
-			}
-		}
-		// if the effect was used and is now empty then destroy yourself
-		// (if you have to "destroyWhenEmpty")
-		if ( succeed ) {
-			if ( effect->empty && destroyWhenEmpty ) {
-				if ( user->container ) {
-					user->container->remove(owner);
-				}
-				delete owner;
-			}
-		}
-		return succeed;
-	} else return false;
 }

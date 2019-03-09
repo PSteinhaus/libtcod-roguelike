@@ -9,6 +9,7 @@ const int MAX_NAME_LENGTH = 40;
 #include <vector>
 typedef std::pair<int,int> Point;
 class Actor;
+class Tile;
 #include "Persistent.hpp"
 #include "Body.hpp"
 #include "Destructible.hpp"
@@ -18,6 +19,7 @@ class Actor;
 #include "Equipable.hpp"
 #include "TargetSelector.hpp"
 #include "Digestor.hpp"
+#include "Useable.hpp"
 #include "Pickable.hpp"
 #include "Container.hpp"
 #include "ActorRepository.hpp"

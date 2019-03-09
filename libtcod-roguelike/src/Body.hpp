@@ -5,22 +5,18 @@ public:
 	enum EquipmentSlot {
 		HAND, RING, HEAD, AMULET, TORSO, LEGS, FEET
 	};
+	std::vector<std::pair<EquipmentSlot,Actor*>> slots;
 	Actor* equip(Actor* owner, Actor* equipment, bool replace);
 	void load(TCODZip& zip);
 	void save(TCODZip& zip);
-private:
-	std::vector<std::pair<EquipmentSlot,Actor*>> slots;
-	//TCODList<std::pair<EquipmentSlot,Actor*>> slots;
-	friend class Body;
 };
 
 class Body : public Persistent
 {
 public:
+	TCODList<BodyPart*> parts;
 	virtual ~Body();
 	Actor* equip(Actor* owner, Actor* equipment);
 	void load(TCODZip& zip);
 	void save(TCODZip& zip);
-private:
-	TCODList<BodyPart*> parts;
 };

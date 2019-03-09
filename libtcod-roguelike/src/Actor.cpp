@@ -40,6 +40,11 @@ float Actor::getVolume() const {
 	return totalVolume;
 }
 
+bool Actor::onActorsList() const {
+	return x!=-1 || y!=-1;	// for now x = y = -1 signals that an actor has been removed from the map
+}
+
+
 void Actor::switchBlocking() {
 	blocks = !blocks;
 	engine.map->computeTCODMapAt(x,y);

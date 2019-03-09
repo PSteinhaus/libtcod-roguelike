@@ -1,18 +1,3 @@
-class Useable : public Persistent
-{
-public:
-	Useable(TargetSelector *selector, Effect *effect, bool destroyWhenEmpty=true);
-	virtual ~Useable();
-	virtual bool use(Actor* owner, Actor* user);
-	void save(TCODZip& zip);
-	void load(TCODZip& zip);
-
-protected:
-	TargetSelector *selector;
-	Effect *effect;
-	bool destroyWhenEmpty;
-};
-
 class Pickable : public Persistent
 {
 public:

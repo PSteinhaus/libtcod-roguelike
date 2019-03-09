@@ -345,18 +345,13 @@ bool Map::inMap(int x, int y, bool includeBorders) const {
 
 bool Map::canWalk(int x, int y) const {
 	return map->isWalkable(x,y);
-	/*
-	for (Actor** iterator = engine.getActors(x,y).begin(); iterator != engine.actors.end(); iterator++) {
-		Actor* actor = *iterator;
-		if ( actor->blocks && actor->x == x && actor->y == y ) {
-			// there is a blocking actor there. cannot walk
-			return false;
-		}
-	}
-	return true;*/
 }
 
 Map::FieldType Map::fieldTypeAt(int x, int y) const { return tiles[x+y*width].fieldType; }
+
+Tile* Map::tileAt(int x, int y) const {
+	return &tiles[x+y*width];
+}
 
 bool Map::isExplored(int x, int y) const {
 	return tiles[x+y*width].explored;
