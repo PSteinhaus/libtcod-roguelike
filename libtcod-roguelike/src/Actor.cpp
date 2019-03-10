@@ -41,7 +41,9 @@ float Actor::getVolume() const {
 }
 
 bool Actor::onActorsList() const {
-	return x!=-1 || y!=-1;	// for now x = y = -1 signals that an actor has been removed from the map
+	for ( auto it=engine.actorsBegin(); it!=engine.actorsEnd(); ++it )
+		if ( *it == this ) return true;
+	return false;
 }
 
 

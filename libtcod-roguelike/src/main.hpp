@@ -25,6 +25,7 @@ class Tile;
 #include "ActorRepository.hpp"
 #include "Actor.hpp"
 class Chunk;
+#include "Tile.hpp"
 #include "Map.hpp"
 #include "Chunk.hpp"
 #include "Gui.hpp"

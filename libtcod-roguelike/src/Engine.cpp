@@ -7,15 +7,20 @@ Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gam
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
 	TCODConsole::initRoot(screenWidth, screenHeight, "witchRogue prototype", false, TCOD_RENDERER_GLSL);
 	gui = new Gui();
+	for(int i=0; i<worldSize; i++)
+		for(int j=0; j<worldSize; j++)
+			for(int k=0; k<worldDepth; k++)
+				world[i][j][k] = new Chunk();
 }
 
 void Engine::init() {
 	// generate the world
 	for(int i=0; i<worldSize; i++)
 		for(int j=0; j<worldSize; j++)
-			for(int k=0; k<worldDepth; k++)
+			for(int k=0; k<worldDepth; k++) {
 				if ( i!=worldSize/2 || j!=worldSize/2 || k!=0 )
 					world[i][j][k] = (k==0) ? new Chunk(Chunk::PLAINS) : new Chunk(Chunk::CAVE,false,k);
+			}
 	world[worldSize/2][worldSize/2][0] = new Chunk(Chunk::WITCH_HUT,true);
 
 	depth = 1;
@@ -141,8 +146,6 @@ void Engine::removeActorFromPos(Actor* actor) {
 
 std::list<Actor*>::iterator Engine::removeActor(std::list<Actor*>::iterator iterator, bool destroy) {
 	Actor* actor = *iterator;
-	// set position to (-1,-1), to let the actor know it's off the actors list
-	actor->x = -1; actor->y = -1;
 	// remove the actor from actorsAt
 	removeActorFromPos(actor);
 	// remove from actors
@@ -156,8 +159,6 @@ std::list<Actor*>::iterator Engine::removeActor(std::list<Actor*>::iterator iter
 void Engine::removeActor(Actor* actor, bool destroy) {
 	// remove the actor from actorsAt
 	removeActorFromPos(actor);
-	// set position to (-1,-1), to let the actor know it's off the actors list
-	actor->x = -1; actor->y = -1;
 	// remove from actors
 	actors.remove(actor);
 	// if the actor isn't supposed to be stored elsewhere it needs to be deleted

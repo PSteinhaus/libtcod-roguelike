@@ -2,9 +2,10 @@ class Map : public Persistent
 {
 public:
 	int width,height;
+	/*
 	enum FieldType {
 		FLOOR, WALL, GRASS, TREE
-	};
+	};*/
 
 	Map(int width, int height, Chunk* chunk);
 	virtual ~Map();
@@ -17,7 +18,6 @@ public:
 	void computeTileMapAt(int x, int y);
 	bool inMap(int x, int y, bool includeBorders=true) const;
 	bool isWall(int x, int y) const;
-	inline FieldType fieldTypeAt(int x, int y) const;
 	Tile* tileAt(int x, int y) const;
 	bool canWalk(int x, int y) const;
 	void render() const;
@@ -30,14 +30,14 @@ public:
 	void save(TCODZip& zip);
 
 	// map modification tools
-	void setField	(int x, int y, FieldType fieldType);
-	void setRect	(int x, int y, int width0, int height0, FieldType fieldType);
-	void setEllipse	(int x, int y, int width0, int height0, FieldType fieldType);
-	void setEllipseGrad	(int x, int y, int width0, int height0, float gradStart, FieldType fieldType);
-	inline void fill(FieldType fieldType) { setRect(0,0,width,height,fieldType); }
+	void setField	(int x, int y,Tile::FieldType fieldType);
+	void setRect	(int x, int y, int width0, int height0, Tile::FieldType fieldType);
+	void setEllipse	(int x, int y, int width0, int height0, Tile::FieldType fieldType);
+	void setEllipseGrad	(int x, int y, int width0, int height0, float gradStart, Tile::FieldType fieldType);
+	inline void fill(Tile::FieldType fieldType) { setRect(0,0,width,height,fieldType); }
 
 protected:
-	Tile* tiles;
+	Tile** tiles;
 	TCODMap* map;
 	TCODMap* tileMap;
 	Chunk* chunk;
@@ -48,17 +48,4 @@ protected:
 	bool connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, int randomness, int thickness );
 	void fillRoom(int x1, int y1, int x2, int y2, bool first);
 	bool randomFreeField(int x0, int y0, int width, int height ,int* x, int* y, bool wall=false);
-};
-
-class Tile : public Persistent {
-public:
-	bool explored;	// has the player already seen this tile?
-	bool transparent;	// can the player (and possibly monsters) look through this tile?
-	bool walkable;	// can the player (and possibly monsters) walk over this tile?
-
-	Map::FieldType fieldType;
-
-	Tile() : explored(false), transparent(false), walkable(false), fieldType(Map::FieldType::FLOOR) {}
-	void load(TCODZip& zip);
-	void save(TCODZip& zip);
 };

@@ -3,38 +3,31 @@
 #include "main.hpp"
 #include <cmath>
 
-void Map::setField(int x, int y, Map::FieldType fieldType) {
-	tiles[x+y*width].fieldType = fieldType;
+void Map::setField(int x, int y, Tile::FieldType fieldType) {
+	Tile** tile = &tiles[x+y*width];
+	delete *tile;
 	switch(fieldType) {
-		case GRASS :
-		case FLOOR :
-			tiles[x+y*width].transparent = true;
-			tiles[x+y*width].walkable = true;
-		break;
-		case TREE :
-		case WALL :
-			tiles[x+y*width].transparent = false;
-			tiles[x+y*width].walkable = false;
-		break;
-
-		default:
-		break;
+		case Tile::GRASS : *tile = new GrassTile(); break;
+		case Tile::FLOOR : *tile = new FloorTile(); break;
+		case Tile::TREE : *tile = new TreeTile(); break;
+		case Tile::WALL : *tile = new WallTile(); break;
+		default: break;
 	}
 	computeTCODMapAt(x,y);
 	computeTileMapAt(x,y);
 }
 
-void Map::setRect(int x, int y, int width0, int height0, Map::FieldType fieldType) {
+void Map::setRect(int x, int y, int width0, int height0, Tile::FieldType fieldType) {
 	for (int i=0; i<width0 && x+i<width; i++)
 		for (int j=0; j<height0 && y+j<height; j++)
 			setField(x+i,y+j,fieldType);
 }
 
-void Map::setEllipse(int x, int y, int width0, int height0, Map::FieldType fieldType) {
+void Map::setEllipse(int x, int y, int width0, int height0, Tile::FieldType fieldType) {
 	setEllipseGrad(x,y, width0,height0, 1, fieldType);
 }
 
-void Map::setEllipseGrad(int x, int y, int width0, int height0, float gradStart, FieldType fieldType) {
+void Map::setEllipseGrad(int x, int y, int width0, int height0, float gradStart, Tile::FieldType fieldType) {
 	TCODRandom* rng = TCODRandom::getInstance();
 	int xCenter = width0/2; 	// coordinates of the center of the ellipse
 	int yCenter = height0/2;	// relative to x and y
@@ -64,7 +57,7 @@ void Map::dig(int x1, int y1, int x2, int y2) {
 		y1 = tmp;
 	}
 
-	setRect(x1,y1, x2-x1+1, y2-y1+1, FieldType::FLOOR );
+	setRect(x1,y1, x2-x1+1, y2-y1+1, Tile::FieldType::FLOOR );
 
 	/*
 	for (int tileX = x1; tileX <= x2; tileX++) {
@@ -100,7 +93,7 @@ bool Map::connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, in
 
 		for (int i=0; i < thickness-1 || i==0; i++)
 			for (int j=0; j < thickness; j++) {
-				if ( inMap(x+i,y+j, false) ) setField(x+i,y+j, FieldType::FLOOR );
+				if ( inMap(x+i,y+j, false) ) setField(x+i,y+j, Tile::FieldType::FLOOR );
 			}
 		
 	}

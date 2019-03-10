@@ -70,6 +70,7 @@ void Engine::save() {
 			for(int j=0; j<worldSize; j++)
 				for(int k=0; k<worldDepth; k++)
 					world[i][j][k]->save(zip);
+
 		zip.saveToFile("game.sav");
 	}
 }
@@ -105,8 +106,10 @@ void Engine::load() {
 	// and finally THE WORLD!
 	for(int i=0; i<worldSize; i++)
 		for(int j=0; j<worldSize; j++)
-			for(int k=0; k<worldDepth; k++)
+			for(int k=0; k<worldDepth; k++) {
+				world[i][j][k] = new Chunk();
 				world[i][j][k]->load(zip);
+			}
 	// to force FOV recomputation
 	gameStatus = STARTUP;
 }
@@ -180,17 +183,8 @@ void Chunk::load(TCODZip& zip) {
 void Map::save(TCODZip& zip) {
 	// iterate over the whole map and save every tile
 	for (int i = 0; i < width*height; i++) {
-		tiles[i].save(zip);
+		tiles[i]->save(zip);
 	}
-	// save the map (libtcod-map-container)
-	bitArray = BitArray();	
-	for (int x = 0; x < width; x++)
-		for (int y = 0; y < height; y++) {
-			bitArray.save(zip, map->isTransparent(x,y));
-			bitArray.save(zip, map->isWalkable(x,y));
-		}
-	// save the last bit array
-	bitArray.finish(zip);
 	// save the savedActors
 	zip.putInt(savedActors.size());
 	for (Actor** it=savedActors.begin(); it!=savedActors.end(); it++) {
@@ -199,17 +193,11 @@ void Map::save(TCODZip& zip) {
 }
 
 void Map::load(TCODZip& zip) {
-	// iterate over the whole map and load every tile
+	// iterate over the whole map and load every tile 
 	for (int i = 0; i < width*height; i++) {
-		tiles[i].load(zip);
+		delete tiles[i];
+		tiles[i] = Tile::create(zip);
 	}
-	// load the map (libtcod-map-container)
-	// load the first bit array
-	bitArray = BitArray(&zip);
-	for (int x = 0; x < width; x++)
-		for (int y = 0; y < height; y++) {
-			map->setProperties(x,y,bitArray.load(zip),bitArray.load(zip));
-		}
 	// load the savedActors
 	int nbActors = zip.getInt();
 	while ( nbActors > 0 ) {
@@ -221,24 +209,31 @@ void Map::load(TCODZip& zip) {
 	// recalculate tileMap
 	for (int x = 0; x < width; x++)
 		for (int y = 0; y < height; y++) {
+			computeTCODMapAt(x,y);
 			computeTileMapAt(x,y);
 		}
 }
 
+Tile* Tile::create(TCODZip& zip) {
+	FieldType type = (FieldType)(zip.getInt());
+	Tile* tile = NULL;
+	switch(type) {
+		case FLOOR : tile = new FloorTile(); break;
+		case WALL : tile = new WallTile(); break;
+		case GRASS: tile = new GrassTile(); break;
+		case TREE: tile = new TreeTile(); break;
+	}
+	tile->load(zip);
+	return tile;
+}
+
 void Tile::save(TCODZip& zip) {
-	//bitArray.save(zip, explored);
+	zip.putInt( (int)fieldType() );
 	zip.putInt(explored);
-	zip.putInt(transparent);
-	zip.putInt(walkable);
-	zip.putInt( (int)fieldType );
 }
 
 void Tile::load(TCODZip& zip) {
-	//explored = bitArray.load(zip);
-	explored = (bool)zip.getInt();
-	transparent = (bool)zip.getInt();
-	walkable = (bool)zip.getInt();
-	fieldType = (Map::FieldType)zip.getInt();
+	explored = zip.getInt();
 }
 
 void Actor::save(TCODZip& zip) {

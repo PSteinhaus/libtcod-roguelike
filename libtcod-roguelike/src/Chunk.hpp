@@ -23,6 +23,7 @@ struct Chunk : public Persistent
 		// TCODList<Plants*> plants;
 	} biomeData;
 
+	Chunk() = default;
 	Chunk(BroadType broadType, bool persistentMap=false, int depth=0);
 	virtual ~Chunk() {};
 	void save(TCODZip& zip);

@@ -34,7 +34,7 @@ public:
 					int xStep, yStep;
 					TCODRandom* rng = TCODRandom::getInstance();
 					for(float i=0; i<( pow(node->w*node->h,2)*dig_rnd_mod/1000 ); i++) {
-						map.setField(x,y, Map::FieldType::FLOOR);
+						map.setField(x,y, Tile::FieldType::FLOOR);
 						if ( rng->getInt(1,100) > dig_rnd_centricity ) { // make sure not to stray too far from the center
 							do {
 								xStep = rng->getInt(-1,1);
@@ -144,8 +144,8 @@ void Map::removeActor(Actor* actor) {
 
 void Map::computeTCODMapAt(int x, int y) {
 	// first check tile
-	bool transparent = tiles[x+width*y].transparent;
-	bool walkable = tiles[x+width*y].walkable;
+	bool transparent = tileAt(x,y)->transparent();
+	bool walkable = tileAt(x,y)->walkable();
 	// then the actors
 	TCODList<Actor*> list = engine.getActors(x,y,false);
 	for( Actor** it=list.begin(); it!=list.end(); it++ ) {
@@ -158,8 +158,8 @@ void Map::computeTCODMapAt(int x, int y) {
 }
 
 void Map::computeTileMapAt(int x, int y) {
-	bool transparent = tiles[x+width*y].transparent;
-	bool walkable = tiles[x+width*y].walkable;
+	bool transparent = tileAt(x,y)->transparent();
+	bool walkable = tileAt(x,y)->walkable();
 	tileMap->setProperties(x,y, transparent, walkable);
 }
 
@@ -191,12 +191,20 @@ void Map::fillRoom(int x1, int y1, int x2, int y2, bool first=false) {
 // ###########################
 
 Map::Map(int width, int height, Chunk* chunk) : width(width), height(height), chunk(chunk) {
-	tiles = new Tile[width*height];
+	
+	tiles = new Tile*[width*height];
+	for ( int x=0; x<width; ++x )
+		for ( int y=0; y<height; ++y )
+			tiles[x+y*width] = new FloorTile();
+	
 	map = new TCODMap(width,height);
 	tileMap = new TCODMap(width,height);
 }
 
 Map::~Map() {
+	for ( int x=0; x<width; ++x )
+		for ( int y=0; y<height; ++y )
+			delete tiles[x+y*width];
 	delete [] tiles;
 	delete map;
 	savedActors.clearAndDelete();
@@ -215,13 +223,13 @@ void Map::init() {
 		{
 		// special cases
 		case Chunk::WITCH_HUT :
-			fill(FieldType::TREE);
-			setEllipseGrad(1,1, width-2,height-2, 0.5, FieldType::GRASS);
+			fill(Tile::FieldType::TREE);
+			setEllipseGrad(1,1, width-2,height-2, 0.5, Tile::FieldType::GRASS);
 			engine.addActor( ActorRep::getActor( ActorRep::Name::DOWNSTAIRS, (width/2)+9,(height/2)-5 ) );
 			// build witch-hut
-			setRect( (width/2)-3,(height/2)-2, 6,5, FieldType::WALL );
-			setRect( (width/2)-2,(height/2)-1, 4,3, FieldType::FLOOR );
-			setField( (width/2),(height/2)-2, FieldType::FLOOR );
+			setRect( (width/2)-3,(height/2)-2, 6,5, Tile::FieldType::WALL );
+			setRect( (width/2)-2,(height/2)-1, 4,3, Tile::FieldType::FLOOR );
+			setField( (width/2),(height/2)-2, Tile::FieldType::FLOOR );
 			engine.addActor( ActorRep::getActor( ActorRep::Name::DOOR, (width/2),(height/2)-2 ) );
 
 		break;
@@ -231,17 +239,17 @@ void Map::init() {
 			if (chunk->terrainData.startWithWalls)
 				switch(chunk->broadType) {
 					case Chunk::WITCH_HUT :
-					case Chunk::PLAINS : fill(FieldType::TREE);
+					case Chunk::PLAINS : fill(Tile::FieldType::TREE);
 					break;
-					default : fill(FieldType::WALL);
+					default : fill(Tile::FieldType::WALL);
 					break;
 				}
 			else 
 				switch(chunk->broadType) {
 					case Chunk::WITCH_HUT :
-					case Chunk::PLAINS : fill(FieldType::GRASS);
+					case Chunk::PLAINS : fill(Tile::FieldType::GRASS);
 					break;
-					default : fill(FieldType::FLOOR);
+					default : fill(Tile::FieldType::FLOOR);
 					break;
 				}
 
@@ -309,7 +317,7 @@ void Map::leave() {
 			}	
 			// delete all actors but the player
 			if ( actor != engine.player ) {
-				it = engine.removeActor(it);
+				it = engine.removeActor(it, true);
 			}
 		}
 		delete this;
@@ -333,7 +341,7 @@ void Map::loadSavedActors() {
 }
 
 bool Map::isWall(int x, int y) const {
-	return !tiles[x+width*y].walkable;
+	return !tileMap->isWalkable(x,y);
 }
 
 bool Map::inMap(int x, int y, bool includeBorders) const {
@@ -347,19 +355,17 @@ bool Map::canWalk(int x, int y) const {
 	return map->isWalkable(x,y);
 }
 
-Map::FieldType Map::fieldTypeAt(int x, int y) const { return tiles[x+y*width].fieldType; }
-
 Tile* Map::tileAt(int x, int y) const {
-	return &tiles[x+y*width];
+	return tiles[x+y*width];
 }
 
 bool Map::isExplored(int x, int y) const {
-	return tiles[x+y*width].explored;
+	return tiles[x+y*width]->explored;
 }
 
 bool Map::isInFov(int x, int y) const {
 	if ( map->isInFov(x,y) ) {
-		tiles[x+y*width].explored = true;
+		tiles[x+y*width]->explored = true;
 		return true;
 	}
 	return false;
@@ -376,44 +382,22 @@ bool Map::randomFreeField(int x0, int y0, int width0, int height0 ,int* x, int* 
 		*x = rng->getInt( x0, x0+width0-1 );
 		*y = rng->getInt( y0, y0+height0-1 );
 		tries++;
-	} while ( !( (!wall && canWalk(*x,*y)) || (wall && tiles[*x+*y*width].walkable) ) && tries < width0*height0*width0*height0 );
-	if ( !( (!wall && canWalk(*x,*y)) || (wall && tiles[*x+*y*width].walkable) ) ) { // simply go through all fields and take the first free one
+	} while ( !( (!wall && canWalk(*x,*y)) || (wall && !isWall(*x,*y) ) ) && tries < width0*height0*width0*height0 );
+	if ( !( (!wall && canWalk(*x,*y)) || (wall && !isWall(*x,*y)) ) ) { // simply go through all fields and take the first free one
 		for(int i=0; i<width0; i++)
 			for(int j=0; j<height0; j++) {
 				*x = i;
 				*y = j;
-				if ( (!wall && canWalk(*x,*y)) || (wall && tiles[*x+*y*width].walkable) ) break;
+				if ( (!wall && canWalk(*x,*y)) || (wall && !isWall(*x,*y)) ) break;
 			}
 	}
-	return ( (!wall && canWalk(*x,*y)) || (wall && tiles[*x+*y*width].walkable) );
+	return ( (!wall && canWalk(*x,*y)) || (wall && !isWall(*x,*y)) );
 }
 
 void Map::render() const {
-	/*
-	static const TCODColor darkWall(0,0,100);
-	static const TCODColor darkGround(50,50,150);
-	static const TCODColor lightWall(130,110,50);
-	static const TCODColor lightGround(200,180,50);
-	*/
-
-	for (int x = 0; x < width; ++x) {
+	for (int x = 0; x < width; ++x)
 		for (int y = 0; y < height; ++y) {
-			//if ( isExplored(x,y) ) {
-			TCODConsole::root->setCharForeground(x, y, TCODColor::darkerGrey );
-			TCODConsole::root->setChar(x,y, isWall(x,y) ? '#' : '.');
-			//}
-			if ( isInFov(x,y) )
-				switch( fieldTypeAt(x,y) ) {
-					case FLOOR :
-					case WALL :
-						TCODConsole::root->setCharForeground(x, y, TCODColor::white );
-					break;
-
-					case GRASS :
-					case TREE :
-						TCODConsole::root->setCharForeground(x, y, TCODColor::green );
-					break;
-				}
+			//if ( isExplored(x,y) )
+			tileAt(x,y)->render(x,y);
 		}
-	}
 }
