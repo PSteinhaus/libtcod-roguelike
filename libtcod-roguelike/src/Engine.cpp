@@ -118,6 +118,17 @@ void Engine::render() {
 	gui->render();
 }
 
+void Engine::showLoadingScreen() {
+	TCODConsole::root->clear();
+	// print text in the middle of the screen
+	TCODConsole::root->setDefaultForeground(TCODColor::white);
+	TCODConsole::root->setAlignment(TCOD_CENTER);
+	TCODConsole::root->printf(screenWidth/2,screenHeight/2, "Loading...");
+	TCODConsole::root->setAlignment(TCOD_LEFT);
+	TCODConsole::flush();
+}
+
+
 void Engine::sendToBack(Actor* actor) {
 	Point position = Point(actor->x, actor->y);
 	actorsAt[position].remove(actor);

@@ -51,6 +51,7 @@ public :
 	void load();
 	void save();
 	void gameMenu();
+	void showLoadingScreen();
 	Actor* getActor(int x, int y, bool aliveRequired = true);
 	TCODList<Actor*> getActors(int x, int y, bool aliveRequired = true);
 	void entitiesInRange( int x, int y, float range, bool aliveRequired, TCODList<Actor*>* list=NULL, TCODList<Tile*>* tileList=NULL );

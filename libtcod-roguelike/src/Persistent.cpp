@@ -76,6 +76,7 @@ void Engine::save() {
 }
 
 void Engine::load() {
+	showLoadingScreen();
 	TCODZip zip;
 	// continue a saved game
 	terminate();
