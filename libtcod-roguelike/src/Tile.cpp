@@ -1,6 +1,6 @@
 #include "main.hpp"
 
-void Tile::render(int x, int y) const {
+void Tile::render() const {
 	if ( engine.map->isInFov(x,y) )
 		TCODConsole::root->setCharForeground(x,y, color() );
 	else

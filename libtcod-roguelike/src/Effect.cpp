@@ -42,10 +42,21 @@ bool DoorEffect::applyTo(Actor* actor) {
 	if ( actor->blocks ) {
 		actor->ch = '.';
 		actor->switchBlocking();
+		actor->switchTransparent();
 		return true;
 	} else if ( engine.getActors(actor->x,actor->y, false).size()==1 ) { // if there is only the door and nothing else (is probably gonna change as soon as really small actors start being around)
 		actor->ch = originalChar;
 		actor->switchBlocking();
+		actor->switchTransparent();
+		return true;
+	}
+	return false;
+}
+
+bool DoorEffect::applyTo(Tile *tile) {
+	// simplistic, but will perhaps be improved one day by adding a "correspondingFloorType()" function to the Tile class
+	if ( !tile->walkable() ) {
+		engine.map->setField(tile->x,tile->y, Tile::FLOOR);
 		return true;
 	}
 	return false;

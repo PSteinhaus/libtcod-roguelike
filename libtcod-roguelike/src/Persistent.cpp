@@ -42,9 +42,9 @@ void BitArray::finish(TCODZip& zip) {
 }
 
 void Engine::save() {
-	if ( player==NULL || player->destructible->isDead() ) {
+	if ( player!=NULL && player->destructible->isDead() ) {
 		TCODSystem::deleteFile("game.sav");
-	} else {
+	} else if ( player!=NULL && !player->destructible->isDead() ) {
 		TCODZip zip;
 		// save the player first
 		player->save(zip);
@@ -105,12 +105,14 @@ void Engine::load() {
 	// the message log
 	gui->load(zip);
 	// and finally THE WORLD!
+	
 	for(int i=0; i<worldSize; i++)
 		for(int j=0; j<worldSize; j++)
 			for(int k=0; k<worldDepth; k++) {
-				world[i][j][k] = new Chunk();
+				world[i][j][k] = new Chunk(Chunk::PLAINS);
 				world[i][j][k]->load(zip);
 			}
+
 	// to force FOV recomputation
 	gameStatus = STARTUP;
 }
@@ -149,6 +151,8 @@ void Chunk::save(TCODZip& zip) {
 	zip.putInt( terrainData.startWithWalls );
 	zip.putInt( (int)terrainData.roomCreation );
 	zip.putInt( (int)terrainData.tunnelCreation );
+	zip.putInt( terrainData.numDownStairs );
+	zip.putInt( terrainData.numUpStairs );
 	// biomeData
 	zip.putInt( biomeData.creatures.size() );
 	for(auto it = biomeData.creatures.cbegin(); it != biomeData.creatures.cend(); ++it) {
@@ -162,6 +166,7 @@ void Chunk::load(TCODZip& zip) {
 	if ( zip.getInt() ) {
 		if ( this == engine.currentChunk() ) {
 			map = engine.map;
+			map->chunk = this;
 		} else {
 			map = new Map( zip.getInt(), zip.getInt(), this);
 			map->load(zip);
@@ -172,6 +177,8 @@ void Chunk::load(TCODZip& zip) {
 	terrainData.startWithWalls = (bool)zip.getInt();
 	terrainData.roomCreation = (TerrainData::RoomCreation)zip.getInt();
 	terrainData.tunnelCreation = (TerrainData::TunnelCreation)zip.getInt();
+	terrainData.numDownStairs = zip.getInt();
+	terrainData.numUpStairs = zip.getInt();
 	// biomeData
 	// creature map
 	biomeData.creatures.clear();
@@ -219,10 +226,10 @@ Tile* Tile::create(TCODZip& zip) {
 	FieldType type = (FieldType)(zip.getInt());
 	Tile* tile = NULL;
 	switch(type) {
-		case FLOOR : tile = new FloorTile(); break;
-		case WALL : tile = new WallTile(); break;
-		case GRASS: tile = new GrassTile(); break;
-		case TREE: tile = new TreeTile(); break;
+		case FLOOR : tile = new FloorTile(0,0); break;
+		case WALL : tile = new WallTile(0,0); break;
+		case GRASS: tile = new GrassTile(0,0); break;
+		case TREE: tile = new TreeTile(0,0); break;
 	}
 	tile->load(zip);
 	return tile;
@@ -231,10 +238,14 @@ Tile* Tile::create(TCODZip& zip) {
 void Tile::save(TCODZip& zip) {
 	zip.putInt( (int)fieldType() );
 	zip.putInt(explored);
+	zip.putInt(x);
+	zip.putInt(y);
 }
 
 void Tile::load(TCODZip& zip) {
 	explored = zip.getInt();
+	x = zip.getInt();
+	y = zip.getInt();
 }
 
 void Actor::save(TCODZip& zip) {

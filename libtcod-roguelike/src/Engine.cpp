@@ -10,7 +10,7 @@ Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gam
 	for(int i=0; i<worldSize; i++)
 		for(int j=0; j<worldSize; j++)
 			for(int k=0; k<worldDepth; k++)
-				world[i][j][k] = new Chunk();
+				world[i][j][k] = new Chunk(Chunk::PLAINS);
 }
 
 void Engine::init() {
@@ -36,7 +36,7 @@ void Engine::init() {
 	addActor(player);
 	map->init();
 	gui->message(TCODColor::red,"Welcome stranger.");
-	gameStatus = STARTUP;
+	gameStatus = NEW_MAP;
 }
 
 void Engine::terminate() {
@@ -59,7 +59,7 @@ Engine::~Engine() {
 }
 
 void Engine::update() {
-	if ( gameStatus == STARTUP ) map->computeFov();
+	if ( gameStatus == STARTUP || gameStatus == NEW_MAP ) map->computeFov();
 	gameStatus=IDLE;
 
 	TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS, &lastKey, NULL);
@@ -127,7 +127,6 @@ void Engine::showLoadingScreen() {
 	TCODConsole::root->setAlignment(TCOD_LEFT);
 	TCODConsole::flush();
 }
-
 
 void Engine::sendToBack(Actor* actor) {
 	Point position = Point(actor->x, actor->y);
@@ -349,28 +348,9 @@ void Engine::changeChunk(int dx, int dy, int dz) {
 		map = curCh->map;
 		map->loadSavedActors();
 	}
-	gameStatus = STARTUP;
+	gameStatus = NEW_MAP;
 
 	// try to place stairs at the players position (for logical reasons)
-	/*
-	if ( dz != 0 ) {
-		for (Actor** it = engine.actors.begin(); it != engine.actors.end(); it++) {
-			if ( (dz == 1  && (*it)->ch == '<') ||
-				 (dz == -1 && (*it)->ch == '>') )
-			{
-				// if the new map is persistent then the player has to be placed
-				// at the stairs (instead of the other way around)
-				if ( curCh->persistentMap ) {
-					player->x = (*it)->x;
-					player->y = (*it)->y;
-				} else {
-					(*it)->x = player->x;
-					(*it)->y = player->y;
-				}
-				break;
-			}
-		}
-	}*/
 	if ( dz != 0 ) {
 		for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
 			Actor* actor = *it;
@@ -394,7 +374,7 @@ void Engine::changeChunk(int dx, int dy, int dz) {
 void Engine::gameMenu() {
 	gui->menu.clear();
 	gui->menu.addItem(Menu::NEW_GAME,"New game");
-	if ( TCODSystem::fileExists("game.sav")) {
+	if ( TCODSystem::fileExists("game.sav") || gameStatus!=STARTUP ) {
 		gui->menu.addItem(Menu::CONTINUE,"Continue");
 	}
 	gui->menu.addItem(Menu::EXIT,"Exit");

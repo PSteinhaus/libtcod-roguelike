@@ -31,6 +31,7 @@ public:
 
 	// map modification tools
 	void setField	(int x, int y,Tile::FieldType fieldType);
+	void setField	(Tile* tile, Tile::FieldType fieldType);
 	void setRect	(int x, int y, int width0, int height0, Tile::FieldType fieldType);
 	void setEllipse	(int x, int y, int width0, int height0, Tile::FieldType fieldType);
 	void setEllipseGrad	(int x, int y, int width0, int height0, float gradStart, Tile::FieldType fieldType);
@@ -43,6 +44,8 @@ protected:
 	Chunk* chunk;
 	TCODList<Actor*> savedActors;
 	friend class BspListener;
+	friend class Engine;
+	friend class Chunk;
 
 	void dig(int x1, int y1, int x2, int y2);
 	bool connectRoomsRandom(int x1, int y1, int width1, int height1, int x2, int y2, int width2, int height2, int randomness, int thickness );

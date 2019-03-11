@@ -55,6 +55,7 @@ void Actor::switchBlocking() {
 void Actor::switchTransparent() {
 	transparent = !transparent;
 	engine.map->computeTCODMapAt(x,y);
+	engine.map->computeFov();
 }
 
 bool Actor::store(Actor* item) {

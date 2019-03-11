@@ -10,6 +10,7 @@ public :
 		STARTUP,
 		IDLE,
 		NEW_TURN,
+		NEW_MAP,
 		VICTORY,
 		DEFEAT,
 		EXIT
@@ -17,7 +18,7 @@ public :
 	int fovRadius;
 	int screenWidth;
 	int screenHeight;
-	static const int worldSize = 100;
+	static const int worldSize = 10;
 	static const int worldDepth = 10;
 	int depth;
 	Gui* gui;
@@ -54,8 +55,8 @@ public :
 	void showLoadingScreen();
 	Actor* getActor(int x, int y, bool aliveRequired = true);
 	TCODList<Actor*> getActors(int x, int y, bool aliveRequired = true);
-	void entitiesInRange( int x, int y, float range, bool aliveRequired, TCODList<Actor*>* list=NULL, TCODList<Tile*>* tileList=NULL );
-	inline Chunk* currentChunk() { return world[x][y][depth]; }
+	void entitiesInRange( int x, int y, float range, bool aliveRequired, TCODList<Actor*>* list=NULL, TCODList<Tile*>* tileList=NULL );	
+	inline Chunk* currentChunk() { return world[x][y][depth]; };
 	bool waitForDirection(bool acceptCenter);
 };
 

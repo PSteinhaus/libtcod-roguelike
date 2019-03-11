@@ -16,8 +16,8 @@ Gui::Gui() {
 }
 
 Gui::~Gui() {
-	delete con;
 	clear();
+	delete con;
 }
 
 void Gui::clear() {

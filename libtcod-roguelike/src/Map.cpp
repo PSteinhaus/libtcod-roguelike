@@ -195,7 +195,7 @@ Map::Map(int width, int height, Chunk* chunk) : width(width), height(height), ch
 	tiles = new Tile*[width*height];
 	for ( int x=0; x<width; ++x )
 		for ( int y=0; y<height; ++y )
-			tiles[x+y*width] = new FloorTile();
+			tiles[x+y*width] = new FloorTile(x,y);
 	
 	map = new TCODMap(width,height);
 	tileMap = new TCODMap(width,height);
@@ -398,6 +398,6 @@ void Map::render() const {
 	for (int x = 0; x < width; ++x)
 		for (int y = 0; y < height; ++y) {
 			//if ( isExplored(x,y) )
-			tileAt(x,y)->render(x,y);
+			tileAt(x,y)->render();
 		}
 }
