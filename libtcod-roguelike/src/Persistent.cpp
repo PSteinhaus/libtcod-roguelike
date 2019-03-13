@@ -267,6 +267,7 @@ void Actor::save(TCODZip& zip) {
 	zip.putInt(container != NULL);
 	zip.putInt(stomach != NULL);
 	zip.putInt(interactable != NULL);
+	zip.putInt(body != NULL);
 	// save components themselves
 	if ( attacker ) attacker->save(zip);
 	if ( destructible ) destructible->save(zip);
@@ -275,6 +276,7 @@ void Actor::save(TCODZip& zip) {
 	if ( container ) container->save(zip);
 	if ( stomach ) stomach->save(zip);
 	if ( interactable ) interactable->save(zip);
+	if ( body ) body->save(zip);
 }
 
 void Actor::load(TCODZip& zip) {
@@ -296,6 +298,7 @@ void Actor::load(TCODZip& zip) {
 	bool hasContainer=zip.getInt();
 	bool hasStomach=zip.getInt();
 	bool hasInteractable=zip.getInt();
+	bool hasBody=zip.getInt();
 	// load components
 	if ( hasAttacker ) {
 		attacker = new Attacker(0.0f);
@@ -322,6 +325,10 @@ void Actor::load(TCODZip& zip) {
 	if ( hasInteractable ) {
 		interactable = new Useable(NULL,NULL);
 		interactable->load(zip);
+	}
+	if ( hasBody ) {
+		body = new Body();
+		body->load(zip);
 	}
 }
 
@@ -418,6 +425,8 @@ void Pickable::save(TCODZip& zip) {
 	if ( useable ) useable->save(zip);
 	zip.putInt( !!digestor );
 	if ( digestor ) digestor->save(zip);
+	zip.putInt( !!equipable );
+	if ( equipable ) equipable->save(zip);
 }
 
 void Pickable::load(TCODZip& zip) {
@@ -428,6 +437,10 @@ void Pickable::load(TCODZip& zip) {
 	if ( zip.getInt() ) {
 		digestor = new Digestor(0);
 		digestor->load(zip);
+	}
+	if ( zip.getInt() ) {
+		equipable = new Equipable();
+		equipable->load(zip);
 	}
 }
 
@@ -456,6 +469,8 @@ void Useable::load(TCODZip& zip) {
 
 void TargetSelector::save(TCODZip& zip) {
 	zip.putInt((int)selectorType);
+	zip.putInt(targetActors);
+	zip.putInt(targetTiles);
 }
 
 TargetSelector* TargetSelector::create(TCODZip& zip) {
@@ -469,6 +484,8 @@ TargetSelector* TargetSelector::create(TCODZip& zip) {
 		case EFFECT_CARRIER : selector = new SelectEffectCarrier(); break;
 		case NUMPAD : selector = new SelectNumpadAdjecent(); break;
 	}
+	selector->targetActors = zip.getInt();
+	selector->targetTiles = zip.getInt();
 	selector->load(zip);
 	return selector;
 }
@@ -538,6 +555,8 @@ Effect* Effect::create(TCODZip& zip) {
 		case HEALTH : effect = new HealthEffect(0,NULL); break;
 		case CONFUSE : effect = new ConfusionEffect(0,NULL); break;
 		case DOOR : effect = new DoorEffect('*'); break;
+		case CHANGE_MELEE_DAMAGE : effect = new ChangeMeleeDamage(); break;
+		case CUT : effect = new ApplyCutEffect(); break;
 	}
 	effect->load(zip);
 	return effect;
@@ -594,6 +613,28 @@ void DoorEffect::save(TCODZip& zip) {
 void DoorEffect::load(TCODZip& zip) {
 	Effect::load(zip);
 	originalChar = zip.getInt();
+}
+
+void ChangeMeleeDamage::save(TCODZip& zip) {
+	zip.putInt(CHANGE_MELEE_DAMAGE);
+	Effect::save(zip);
+	zip.putFloat(amount);
+}
+
+void ChangeMeleeDamage::load(TCODZip& zip) {
+	Effect::load(zip);
+	amount = zip.getFloat();
+}
+
+void ApplyCutEffect::save(TCODZip& zip) {
+	zip.putInt(CUT);
+	Effect::save(zip);
+	zip.putFloat(cutValue);
+}
+
+void ApplyCutEffect::load(TCODZip& zip) {
+	Effect::load(zip);
+	cutValue = zip.getFloat();
 }
 
 // AIs

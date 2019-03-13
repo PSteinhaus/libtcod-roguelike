@@ -77,6 +77,17 @@ bool Actor::equip(Actor* equipment) {
 	return false;
 }
 
+bool Actor::unequip(Actor* equipment) {
+	if ( body ) {
+		if ( body->unequip(this, equipment) ) {				// if you successfully unequip it
+			if (!store(equipment))						// try to store it (in your inventory)
+				engine.addActor(equipment, x,y);			// and drop it if you can't
+			return true;		
+		}
+	}
+	return false;
+}
+
 bool Actor::equipableOn(Actor* actor, BodyPart::EquipmentSlot slot) {
 	if( pickable && pickable->equipable )
 		return pickable->equipable->equipableOn(actor,slot);

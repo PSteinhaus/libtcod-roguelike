@@ -20,6 +20,9 @@ public:
 	virtual void load(TCODZip& zip);
 	virtual void save(TCODZip& zip);
 	static Tile* create(TCODZip& zip);
+
+	// interaction
+	virtual bool applyCut(float cutValue) { return false; };
 };
 
 class FloorTile : public Tile {
@@ -64,4 +67,6 @@ public:
 	bool walkable() { return false; };
 	TCODColor color() const { return TCODColor::green; }
 	int ch() const { return '#'; }
+
+	bool applyCut(float cutValue);
 };

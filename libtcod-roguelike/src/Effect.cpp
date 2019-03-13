@@ -61,3 +61,19 @@ bool DoorEffect::applyTo(Tile *tile) {
 	}
 	return false;
 }
+
+ChangeMeleeDamage::ChangeMeleeDamage(float amount) : amount(amount) {}
+
+bool ChangeMeleeDamage::applyTo(Actor* actor) {
+	if ( actor->attacker ) {
+		actor->attacker->power += amount;
+		return true;
+	}
+	return false;
+}
+
+ApplyCutEffect::ApplyCutEffect(float cutValue) : cutValue(cutValue) {}
+
+bool ApplyCutEffect::applyTo(Tile* tile) {
+	return tile->applyCut(cutValue);
+}

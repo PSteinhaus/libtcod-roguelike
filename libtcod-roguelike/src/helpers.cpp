@@ -3,6 +3,30 @@
 #include "main.hpp"
 #include <math.h>
 
+bool numpadMove() {
+	switch(engine.lastKey.vk) {
+		case TCODK_KP8 :	// up
+		case TCODK_UP :		return true;
+		case TCODK_KP2 :	// down
+		case TCODK_DOWN :	return true;
+		case TCODK_KP4 :	// left
+		case TCODK_LEFT :	return true;
+		case TCODK_KP6 :	// right
+		case TCODK_RIGHT :	return true;
+		case TCODK_KP7 :	// up-left
+							return true;
+		case TCODK_KP9 :	// up-right
+							return true;
+		case TCODK_KP1 :	// down-left
+							return true;
+		case TCODK_KP3 :	// down-right
+							return true;
+		case TCODK_KP5 :	// center
+							return true;
+		default: return false;
+	}
+}
+
 bool numpadMove(int* x, int* y) {
 	switch(engine.lastKey.vk) {
 		case TCODK_KP8 :	// up
@@ -21,6 +45,8 @@ bool numpadMove(int* x, int* y) {
 							*x +=-1; *y +=1; return true;
 		case TCODK_KP3 :	// down-right
 							*x +=1; *y +=1; return true;
+		case TCODK_KP5 :	// center
+							return true;
 		default: return false;
 	}
 }

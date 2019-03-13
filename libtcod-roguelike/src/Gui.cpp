@@ -65,10 +65,6 @@ void Gui::renderBar(int x, int y, int width, const char* name, float value,
 }
 
 Gui::Message::Message(char* text, const TCODColor& col) : text(strdup(text)), col(col) {
-	/*
-	this->text = new char[strlen(text)];
-	strcpy(this->text, text);
-	*/
 }
 
 Gui::Message::~Message() {
@@ -92,6 +88,9 @@ void Gui::message(const TCODColor& col, const char* text, ...) {
 		log.insertBefore( new Message(msgText, col), 0 );
 		free(msgText);
 	}
+	// render the gui and flush the root console to show the message immediately
+	render();
+	TCODConsole::flush();
 }
 
 Menu::~Menu() {

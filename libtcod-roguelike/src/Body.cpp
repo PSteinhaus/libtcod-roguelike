@@ -1,4 +1,5 @@
 #include "main.hpp"
+#include <cstdarg>
 
 Body::~Body() {
 	parts.clearAndDelete();
@@ -22,6 +23,24 @@ Actor* Body::equip(Actor* owner, Actor* equipment) {
 	return returnVal;
 }
 
+bool Body::unequip(Actor* owner, Actor* equipment) {
+	// first check if this actor can be equiped at all
+	if ( !equipment->pickable || !equipment->pickable->equipable ) return false;
+	// try to unequip on any bodypart
+	for ( auto it=parts.begin(); it!=parts.end(); it++ ) {
+		if ( (*it)->unequip(owner,equipment) ) return true; // succesfully unequiped
+	}
+	return false;
+}
+
+BodyPart::BodyPart(int numOfSlots, ...) {
+	va_list args;
+	va_start(args, numOfSlots);
+	for ( int i = 0; i<numOfSlots; ++i )
+		slots.push_back( std::pair<EquipmentSlot,Actor*>( (EquipmentSlot)va_arg(args,int),NULL ) );
+	va_end(args);
+}
+
 BodyPart::~BodyPart() {
 	for ( auto it=slots.begin(); it!=slots.end(); it++ ) {
 		auto slot = *it;
@@ -32,7 +51,7 @@ BodyPart::~BodyPart() {
 Actor* BodyPart::equip(Actor* owner, Actor* equipment, bool replace) {
 	Actor* returnVal = equipment;
 	for ( auto it=slots.begin(); it!=slots.end(); it++ ) {			// check all slots
-		std::pair<EquipmentSlot,Actor*> slot = *it;
+		std::pair<EquipmentSlot,Actor*>& slot = *it;
 		if ( slot.second==NULL || replace )							// if the slot is free, or can be replaced
 			if( equipment->equipableOn(owner, slot.first) ) {		// and the actor can be equiped there:
 				returnVal = slot.second;							// return the old equipment of this slot
@@ -43,4 +62,16 @@ Actor* BodyPart::equip(Actor* owner, Actor* equipment, bool replace) {
 			}
 	}
 	return returnVal;
+}
+
+bool BodyPart::unequip(Actor* owner, Actor* equipment) {
+	for ( auto it=slots.begin(); it!=slots.end(); it++ ) {			// check all slots
+		std::pair<EquipmentSlot,Actor*>& slot = *it;
+		if ( slot.second==equipment ) {								// if the slot holds the equipment
+				equipment->unequipOn(owner);						// unequip the new equipment
+				slot.second = NULL;									// and free the slot
+				return true;
+		}
+	}
+	return false;
 }

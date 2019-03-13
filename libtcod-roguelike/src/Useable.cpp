@@ -44,5 +44,7 @@ bool Useable::use(Actor* owner, Actor* user, bool implicitly) {
 			}
 		}
 		return succeed;
-	} else return false;
+	} else {
+		return false;
+	}
 }

@@ -231,6 +231,7 @@ void Map::init() {
 			setRect( (width/2)-2,(height/2)-1, 4,3, Tile::FieldType::FLOOR );
 			setField( (width/2),(height/2)-2, Tile::FieldType::FLOOR );
 			engine.addActor( ActorRep::getActor( ActorRep::Name::DOOR, (width/2),(height/2)-2 ) );
+			engine.addActor( ActorRep::getActor( ActorRep::Name::AXE, (width/2)+1,(height/2)-1 ) );
 
 		break;
 

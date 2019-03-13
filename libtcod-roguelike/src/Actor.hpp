@@ -37,6 +37,7 @@ public:
 	bool store(Actor* item);
 	// equipment handling
 	bool equip(Actor* equipment);
+	bool unequip(Actor* equipment);
 	bool equipableOn(Actor* actor, BodyPart::EquipmentSlot slot);
 	void equipOn(Actor* actor);
 	void unequipOn(Actor* actor);

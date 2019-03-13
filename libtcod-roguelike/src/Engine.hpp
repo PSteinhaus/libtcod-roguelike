@@ -57,7 +57,7 @@ public :
 	TCODList<Actor*> getActors(int x, int y, bool aliveRequired = true);
 	void entitiesInRange( int x, int y, float range, bool aliveRequired, TCODList<Actor*>* list=NULL, TCODList<Tile*>* tileList=NULL );	
 	inline Chunk* currentChunk() { return world[x][y][depth]; };
-	bool waitForDirection(bool acceptCenter);
+	bool waitForDirection(int* x, int* y, bool acceptCenter);
 };
 
 extern Engine engine;

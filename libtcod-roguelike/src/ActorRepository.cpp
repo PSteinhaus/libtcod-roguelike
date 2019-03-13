@@ -42,6 +42,26 @@ Actor* ActorRep::getActor(ActorRep::Name name, int x, int y) {
 				new SelectEffectCarrier(),
 				new DoorEffect( actor->ch ) );
 		break;
+		case AXE:
+		{
+			const float weaponDamage = 3;
+			actor = new Actor(x,y,'/',"axe",TCODColor::darkGrey);
+			actor->blocks = false;
+			actor->pickable = new Pickable();
+			actor->pickable->useable = new Useable(
+				new SelectNumpadAdjecent(false),
+				new ApplyCutEffect(5) );
+			actor->pickable->equipable = new Equipable( BodyPart::HAND,
+				new ChangeMeleeDamage(weaponDamage),
+				new ChangeMeleeDamage(-weaponDamage) );
+			actor->pickable->equipable->implicitlyUseable = true;
+		}
+		break;
+		case WOOD:
+			actor = new Actor(x,y,'/',"wood",TCODColor::darkerOrange);
+			actor->blocks = false;
+			actor->pickable = new Pickable();
+		break;
 		default:;
 	}
 	actor->actorRepName = name;

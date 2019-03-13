@@ -27,12 +27,22 @@ void Engine::init() {
 	x = worldSize/2;
 	y = worldSize/2;
 	map = new Map(80,43, currentChunk() );
+	// add the player
 	player = new Actor(40,25,'@',"player",TCODColor::white);
 	player->destructible = new PlayerDestructible(30,2,"your cadaver");
 	player->attacker = new Attacker(5);
 	player->ai = new PlayerAi();
 	player->container = new Container(26,8);
 	player->stomach = new Stomach(4000,2,80,0,6,4000);
+
+	player->body = new Body();
+	player->body->parts.push( new BodyPart(2, BodyPart::HAND, BodyPart::RING) );
+	player->body->parts.push( new BodyPart(2, BodyPart::HAND, BodyPart::RING) );
+	player->body->parts.push( new BodyPart(2, BodyPart::HEAD, BodyPart::AMULET) );
+	player->body->parts.push( new BodyPart(1, BodyPart::TORSO) );
+	player->body->parts.push( new BodyPart(1, BodyPart::LEGS) );
+	player->body->parts.push( new BodyPart(1, BodyPart::FEET) );
+
 	addActor(player);
 	map->init();
 	gui->message(TCODColor::red,"Welcome stranger.");
@@ -392,10 +402,10 @@ void Engine::gameMenu() {
 	}
 }
 
-bool Engine::waitForDirection(bool acceptCenter){
-	int x=0;
-	int y=0;
-	while ( !numpadMove(&x,&y) || (x==0 && y==0 && !acceptCenter) ) {
+bool Engine::waitForDirection(int* x, int* y, bool acceptCenter){
+	int xOld = *x;
+	int yOld = *y;
+	while ( !numpadMove(x,y) || (*x==xOld && *y==yOld && !acceptCenter) ) {
 		TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS, &lastKey, NULL);
 		if (lastKey.vk == TCODK_ESCAPE) return false;
 	}

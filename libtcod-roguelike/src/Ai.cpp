@@ -15,7 +15,7 @@ void PlayerAi::update(Actor* owner) {
 		case TCODK_CHAR :	handleActionKey(owner, engine.lastKey.c); break;
 		default: break;
 	}
-	if ( engine.lastKey.lctrl ) {
+	if ( engine.lastKey.lctrl && numpadMove() ) {
 		if( interactAt( owner, owner->x+dx, owner->y+dy ) )
 			engine.gameStatus = Engine::NEW_TURN;
 	} else {
@@ -34,7 +34,7 @@ bool PlayerAi::interactAt(Actor* owner, int targetX, int targetY) {
 	if(owner->body)
 	for ( auto it=owner->body->parts.begin(); it!=owner->body->parts.end(); ++it )
 		for ( auto slotIt=(*it)->slots.begin(); slotIt!=(*it)->slots.end(); ++slotIt ) {
-			auto slot = *slotIt;
+			auto& slot = *slotIt;
 			if ( slot.second ) {
 				Actor* actor = slot.second;
 				if ( actor->pickable->useable &&
@@ -108,9 +108,39 @@ void PlayerAi::handleActionKey(Actor* owner, int ascii) {
 		break;
 		case 'i' : // display inventory
 		{
+			engine.gui->message(TCODColor::white, "Use what?");
 			Actor* actor = choseFromInventory(owner);
 			if ( actor ) {
 				actor->pickable->use(actor,owner);
+				engine.gameStatus = Engine::NEW_TURN;
+			}
+		}
+		break;
+		case 'w' : // equip ('w'ear) item
+		{
+			engine.gui->message(TCODColor::white, "Equip what?");
+			Actor* actor = choseFromInventory(owner);
+			if ( actor && actor->pickable->equipable ) {
+				if ( owner->equip(actor) ) {
+					owner->container->remove(actor);
+					engine.gui->message(TCODColor::white, "You equiped the %s.", actor->name );
+				} else {
+					engine.gui->message(TCODColor::white, "You cannot equip the %s.", actor->name );
+				}
+				engine.gameStatus = Engine::NEW_TURN;
+			}
+		}
+		break;
+		case 't' : // unequip ('t'ake of) item
+		{
+			engine.gui->message(TCODColor::white, "Unequip what?");
+			Actor* actor = choseFromEquipment(owner);
+			if ( actor && actor->pickable->equipable ) {
+				if ( owner->unequip(actor) ) {
+					engine.gui->message(TCODColor::white, "You unequiped the %s.", actor->name );
+				} else {
+					engine.gui->message(TCODColor::white, "You cannot unequip the %s.", actor->name );
+				}
 				engine.gameStatus = Engine::NEW_TURN;
 			}
 		}
@@ -181,12 +211,59 @@ Actor* PlayerAi::choseFromInventory(Actor* owner) {
 	// wait for a key press
 	TCOD_key_t key;
 	TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS,&key,NULL,true);
+	engine.render();
+	TCODConsole::flush();
 	if ( key.vk == TCODK_CHAR ) {
 		int actorIndex = key.c - 'a';
 		if ( actorIndex >= 0 && actorIndex < owner->container->inventory.size() ) {
 			return owner->container->inventory.get(actorIndex);
 		}
 	}
+	return NULL;
+}
+
+Actor* PlayerAi::choseFromEquipment(Actor* owner) {
+	static const int EQUIPMENT_WIDTH = 50;
+	static const int EQUIPMENT_HEIGHT = 28;
+	static TCODConsole con(EQUIPMENT_WIDTH,EQUIPMENT_HEIGHT);
+	// display the inventory frame
+	con.setDefaultForeground(TCODColor::white);
+	con.printFrame(0,0,EQUIPMENT_WIDTH,EQUIPMENT_HEIGHT,true,TCOD_BKGND_DEFAULT,"equipment");
+	// display the items with their keyboard shortcut
+	con.setDefaultForeground(TCODColor::white);
+	int shortcut = 'a';
+	int y = 1;
+	if ( owner->body )
+		for (auto it = owner->body->parts.begin(); it != owner->body->parts.end(); it++) 
+			for ( auto iter = (*it)->slots.begin(); iter != (*it)->slots.end(); iter++ ) {
+				Actor* actor = (*iter).second;
+				if (actor)
+					con.printRect(2,y,EQUIPMENT_WIDTH-3,0, "(%c) %s", shortcut, actor->name);
+				else 
+					con.printRect(2,y,EQUIPMENT_WIDTH-3,0, "(%c) ", shortcut);
+				y++;
+				shortcut++;
+			}
+	// blit the inventory console on the root console
+	TCODConsole::blit(&con, 0,0,EQUIPMENT_WIDTH,EQUIPMENT_HEIGHT,
+		TCODConsole::root, engine.screenWidth/2 - EQUIPMENT_WIDTH/2,
+		engine.screenHeight/2 - EQUIPMENT_HEIGHT/2);
+	TCODConsole::flush();
+	// wait for a key press
+	TCOD_key_t key;
+	TCODSystem::waitForEvent(TCOD_EVENT_KEY_PRESS,&key,NULL,true);
+	engine.render();
+	TCODConsole::flush();
+	if ( owner->body )
+		if ( key.vk == TCODK_CHAR ) {
+			int actorIndex = key.c - 'a';
+			for (auto it = owner->body->parts.begin(); it != owner->body->parts.end(); it++)
+				for ( auto iter = (*it)->slots.begin(); iter != (*it)->slots.end(); iter++ ) {
+					Actor* actor = (*iter).second;
+					if (actor && actorIndex-- == 0 )
+						return actor;
+				}
+		}
 	return NULL;
 }
 

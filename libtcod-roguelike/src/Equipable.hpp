@@ -1,6 +1,7 @@
 class Equipable : public Persistent
 {
 public:
+	Equipable() = default;
 	Equipable(BodyPart::EquipmentSlot slotNeeded, Effect *equipEffect, Effect *unequipEffect);
 	virtual ~Equipable();
 	bool equipableOn(Actor* actor, BodyPart::EquipmentSlot slot);

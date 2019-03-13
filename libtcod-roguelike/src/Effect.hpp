@@ -12,7 +12,7 @@ public :
 	virtual void load(TCODZip& zip);
 protected:
 	enum EffectType {
-		HEALTH, CONFUSE, DOOR
+		HEALTH, CONFUSE, DOOR, CHANGE_MELEE_DAMAGE, CUT
 	};
 };
 
@@ -48,3 +48,22 @@ public :
 	void load(TCODZip& zip);
 };
 
+class ChangeMeleeDamage : public Effect {
+public:
+	float amount;
+	ChangeMeleeDamage() = default;
+	ChangeMeleeDamage(float amount);
+	bool applyTo(Actor* actor);
+	void save(TCODZip& zip);
+	void load(TCODZip& zip);
+};
+
+class ApplyCutEffect : public Effect {
+public:
+	float cutValue;
+	ApplyCutEffect() = default;
+	ApplyCutEffect(float cutValue);
+	bool applyTo(Tile* tile);
+	void save(TCODZip& zip);
+	void load(TCODZip& zip);
+};

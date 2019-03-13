@@ -1,10 +1,12 @@
 #include "main.hpp"
+#include <stdio.h>
 
 TargetSelector::TargetSelector( bool targetActors, bool targetTiles)
 : aliveRequired(false), singleOnly(false), targetActors(targetActors), targetTiles(targetTiles)
 {}
 
 void TargetSelector::addTargets(int x, int y, TCODList<Actor*>& list, TCODList<Tile*>& tileList) {
+	if ( !engine.map->inMap(x,y) ) return;
 	if( targetActors ){
 		auto baseList = engine.getActors(x,y, aliveRequired);
 		if( singleOnly ) list.push(baseList.pop());
@@ -77,12 +79,13 @@ SelectNumpadAdjecent::SelectNumpadAdjecent( bool acceptCenter, bool targetActors
 }
 
 void SelectNumpadAdjecent::selectTargets(Actor *user, Actor *owner, TCODList<Actor*>& list, TCODList<Tile*>& tileList, bool implicitly ) {
-	if ( !implicitly )
+	if ( !implicitly ) {
 		engine.gui->message(TCODColor::lightGrey, "Use where?");
+		engine.gui->render();
+	} 
 	int x=user->x;
 	int y=user->y;
-	if ( engine.waitForDirection(acceptCenter) ) {	
-		numpadMove(&x,&y); 					// check into which direction the player is pressing right now
+	if ( engine.waitForDirection(&x,&y,acceptCenter) ) { // wait for the player to choose a direction
 		addTargets(x,y, list, tileList);
 	}
 }
