@@ -255,6 +255,7 @@ void Actor::save(TCODZip& zip) {
 	zip.putColor(&col);
 	zip.putString(name);
 	zip.putInt(blocks);
+	zip.putInt(transparent);
 	zip.putInt(fovOnly);
 	zip.putFloat(volume);
 	zip.putFloat(weight);
@@ -286,6 +287,7 @@ void Actor::load(TCODZip& zip) {
 	col=zip.getColor();
 	strcpy( this->name, zip.getString() );
 	blocks=zip.getInt();
+	transparent=zip.getInt();
 	fovOnly=zip.getInt();
 	volume=zip.getFloat();
 	weight=zip.getFloat();
