@@ -7,10 +7,13 @@ const int MAX_NAME_LENGTH = 40;
 #include <map>
 #include <list>
 #include <vector>
+#include <limits>
 typedef std::pair<int,int> Point;
 class Actor;
 class Tile;
 #include "Persistent.hpp"
+#include "Liquid.hpp"
+#include "LiquidContainer.hpp"
 #include "Body.hpp"
 #include "Destructible.hpp"
 #include "Attacker.hpp"

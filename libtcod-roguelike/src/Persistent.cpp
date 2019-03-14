@@ -224,13 +224,7 @@ void Map::load(TCODZip& zip) {
 
 Tile* Tile::create(TCODZip& zip) {
 	FieldType type = (FieldType)(zip.getInt());
-	Tile* tile = NULL;
-	switch(type) {
-		case FLOOR : tile = new FloorTile(0,0); break;
-		case WALL : tile = new WallTile(0,0); break;
-		case GRASS: tile = new GrassTile(0,0); break;
-		case TREE: tile = new TreeTile(0,0); break;
-	}
+	Tile* tile = createByType(type);
 	tile->load(zip);
 	return tile;
 }
@@ -732,4 +726,33 @@ void BodyPart::load(TCODZip &zip) {
 		}
 		slots.push_back(slot);
 	}
+}
+
+void LiquidContainer::save(TCODZip& zip) {
+	zip.putFloat( maxVolume );
+	zip.putInt( !!liquid );
+	if ( liquid )
+		liquid->save(zip);
+}
+
+void LiquidContainer::load(TCODZip& zip) {
+	maxVolume = zip.getFloat();
+	if ( zip.getInt() )
+		liquid = Liquid::create(zip);
+}
+
+Liquid* Liquid::create(TCODZip& zip) {
+	LiquidType type = (LiquidType)zip.getInt();
+	Liquid* liquid = createByType( type );
+	liquid->load(zip);
+	return liquid;
+}
+
+void Liquid::save(TCODZip& zip) {
+	zip.putInt( (int)type );
+	zip.putFloat( volume );
+}
+
+void Liquid::load(TCODZip& zip) {
+	volume = zip.getFloat();
 }

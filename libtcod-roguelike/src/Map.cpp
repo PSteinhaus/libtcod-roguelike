@@ -225,6 +225,7 @@ void Map::init() {
 		case Chunk::WITCH_HUT :
 			fill(Tile::FieldType::TREE);
 			setEllipseGrad(1,1, width-2,height-2, 0.5, Tile::FieldType::GRASS);
+			setEllipse( (width/4), (height/2)+(height/4), 16, 7, Tile::FieldType::WATER);
 			engine.addActor( ActorRep::getActor( ActorRep::Name::DOWNSTAIRS, (width/2)+9,(height/2)-5 ) );
 			// build witch-hut
 			setRect( (width/2)-3,(height/2)-2, 6,5, Tile::FieldType::WALL );

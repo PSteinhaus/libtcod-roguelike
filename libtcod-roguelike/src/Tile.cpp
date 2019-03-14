@@ -8,6 +8,18 @@ void Tile::render() const {
 	TCODConsole::root->setChar( x,y, ch() );
 }
 
+Tile* Tile::createByType(FieldType type, int x, int y) {
+	Tile* tile = NULL;
+	switch(type) {
+		case FLOOR : tile = new FloorTile(x,y); break;
+		case WALL : tile = new WallTile(x,y); break;
+		case GRASS: tile = new GrassTile(x,y); break;
+		case TREE: tile = new TreeTile(x,y); break;
+		case WATER: tile = new WaterTile(x,y); break;
+	}
+	return tile;
+}
+
 bool TreeTile::applyCut(float cutValue) {
 	if ( cutValue >= 5 ) {
 		// turn into wood

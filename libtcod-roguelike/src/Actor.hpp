@@ -16,6 +16,7 @@ public:
 	Stomach* stomach; // a container that can contain actors to be digested
 	Useable* interactable; // whether and how you can interact with this actor 
 	Body* body; 		// its bodyparts if it has any
+	LiquidContainer* liquidContainer; // something that can contain liquids
 	float volume;	// 1 = 250ml
 	float weight;	// 1 = 1g
 	ActorRep::Name actorRepName; // under which (if any) name (enumerator) this Actor can be found

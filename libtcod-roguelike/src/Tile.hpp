@@ -8,7 +8,7 @@ public:
 	virtual int ch() const = 0;
 
 	enum FieldType {
-		FLOOR, WALL, GRASS, TREE
+		FLOOR, WALL, GRASS, TREE, WATER
 	};
 	virtual FieldType fieldType() const = 0;
 
@@ -20,6 +20,7 @@ public:
 	virtual void load(TCODZip& zip);
 	virtual void save(TCODZip& zip);
 	static Tile* create(TCODZip& zip);
+	static Tile* createByType(FieldType type, int x=0, int y=0);
 
 	// interaction
 	virtual bool applyCut(float cutValue) { return false; };
@@ -69,4 +70,15 @@ public:
 	int ch() const { return '#'; }
 
 	bool applyCut(float cutValue);
+};
+
+class WaterTile : public Tile {
+public:
+	WaterTile() = default;
+	WaterTile(int x, int y) : Tile::Tile(x,y) {};
+	FieldType fieldType() const { return WATER; };
+	bool transparent() { return true; };
+	bool walkable() { return false; };
+	TCODColor color() const { return TCODColor::blue; }
+	int ch() const { return '~'; }
 };

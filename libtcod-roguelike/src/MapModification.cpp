@@ -4,16 +4,10 @@
 #include <cmath>
 
 void Map::setField(int x, int y, Tile::FieldType fieldType) {
-	//setField( tileAt(x,y),fieldType );
 	Tile** tile = &tiles[x+y*width];
 	delete *tile;
-	switch(fieldType) {
-		case Tile::GRASS : *tile = new GrassTile(x,y); break;
-		case Tile::FLOOR : *tile = new FloorTile(x,y); break;
-		case Tile::TREE : *tile = new TreeTile(x,y); break;
-		case Tile::WALL : *tile = new WallTile(x,y); break;
-		default: break;
-	}
+	*tile = Tile::createByType(fieldType, x,y);
+	
 	computeTCODMapAt(x,y);
 	computeTileMapAt(x,y);
 }
@@ -22,18 +16,6 @@ void Map::setField(Tile* tile, Tile::FieldType fieldType) {
 	int x = tile->x;
 	int y = tile->y;
 	setField(x,y,fieldType);
-	/*
-	delete tile;
-	switch(fieldType) {
-		case Tile::GRASS : tile = new GrassTile(x,y); break;
-		case Tile::FLOOR : tile = new FloorTile(x,y); break;
-		case Tile::TREE : tile = new TreeTile(x,y); break;
-		case Tile::WALL : tile = new WallTile(x,y); break;
-		default: break;
-	}
-	computeTCODMapAt(x,y);
-	computeTileMapAt(x,y);
-	*/
 }
 
 void Map::setRect(int x, int y, int width0, int height0, Tile::FieldType fieldType) {

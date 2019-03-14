@@ -69,7 +69,7 @@ Engine::~Engine() {
 }
 
 void Engine::update() {
-	if ( gameStatus == STARTUP || gameStatus == NEW_MAP ) map->computeFov();
+	if ( gameStatus == NEW_TURN || gameStatus == STARTUP || gameStatus == NEW_MAP ) map->computeFov();
 	gameStatus=IDLE;
 
 	TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS, &lastKey, NULL);
