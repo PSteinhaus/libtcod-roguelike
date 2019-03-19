@@ -13,6 +13,23 @@ void Camera::setToPos(int x, int y) {
 	mapY = y;
 }
 
+void Camera::followActor(Actor* actor) {
+	setToPos( actor->x - (engine.screenWidth/2), actor->y - ((engine.screenHeight-7)/2) );
+	// check if your view now reaches beyond the map and fix that
+	// left frame
+	if ( mapX < 0 ) mapX = 0;
+	// upper frame
+	if ( mapY < 0 ) mapY = 0;
+	// right frame
+	if ( !engine.map->inMap( mapX+width-1,0 ) ) mapX -= mapX+width - engine.map->width;
+	// bottom frame
+	if ( !engine.map->inMap( 0,mapY+height-1 ) ) mapY -= mapY+height - engine.map->height;
+	// if you still reach beyond the map, at least center the camera on the actor again
+	if ( mapX < 0 ) setToPos( actor->x - (engine.screenWidth/2), mapY );
+	if ( mapY < 0 ) setToPos( mapX, actor->y - ((engine.screenHeight-7)/2) );
+}
+
+
 bool Camera::isOnCamera(int x0, int y0) const {
 	return ( x0>=mapX && x0<mapX+width && y0>=mapY && y0<mapY+height );
 }

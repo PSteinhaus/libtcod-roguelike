@@ -7,7 +7,7 @@ Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gam
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
 	TCODConsole::initRoot(screenWidth, screenHeight, "witchRogue prototype", false, TCOD_RENDERER_GLSL);
 	gui = new Gui();
-	camera = new Camera(0,0, screenWidth, 43);
+	camera = new Camera(0,0, screenWidth, screenHeight-7);
 	for(int i=0; i<worldSize; i++)
 		for(int j=0; j<worldSize; j++)
 			for(int k=0; k<worldDepth; k++)
@@ -27,7 +27,7 @@ void Engine::init() {
 	depth = 1;
 	x = worldSize/2;
 	y = worldSize/2;
-	map = new Map(80,43, currentChunk() );
+	map = new Map(Chunk::MAP_WIDTH,Chunk::MAP_HEIGHT, currentChunk() );
 	// add the player
 	player = new Actor(40,25,'@',"player",TCODColor::white);
 	player->destructible = new PlayerDestructible(30,2,"your cadaver");
@@ -180,7 +180,7 @@ int Engine::totalActors() const {
 
 void Engine::followPlayer() {
 	map->computeFov();
-	camera->setToPos( player->x - (screenWidth/2), player->y - (43/2) );
+	camera->followActor(player);
 }
 
 Tile* Engine::tileAt(int x, int y) const {
@@ -271,15 +271,6 @@ bool Engine::pickATile(int* x, int* y, float maxRange) {
 }
 
 Actor* Engine::getActor(int x, int y, bool aliveRequired) {
-	/*
-	for (Actor** it = actors.begin(); it != actors.end(); it++) {
-		Actor* actor = *it;
-		if ( actor->x == x && actor->y == y && ( !aliveRequired ||
-			(actor->destructible && !actor->destructible->isDead()) ) ) {
-			return actor;
-		}
-	}
-	return NULL;*/
 
 	TCODList<Actor*>& list = actorsAt[Point(x,y)];
 	for (Actor** it = list.begin(); it != list.end(); it++) {
@@ -294,16 +285,6 @@ Actor* Engine::getActor(int x, int y, bool aliveRequired) {
 }
 
 TCODList<Actor*> Engine::getActors(int x, int y, bool aliveRequired) {
-	/*
-	TCODList<Actor*> list;
-	for (Actor** it = actors.begin(); it != actors.end(); it++) {
-		Actor* actor = *it;
-		if ( actor->x == x && actor->y == y && ( !aliveRequired ||
-			(actor->destructible && !actor->destructible->isDead()) ) ) {
-			list.push(actor);
-		}
-	}
-	return list;*/
 
 	TCODList<Actor*> list = actorsAt[Point(x,y)];
 	if (aliveRequired) {
@@ -330,7 +311,7 @@ void Engine::changeChunk(int dx, int dy, int dz) {
 	Chunk* curCh = currentChunk();
 	if ( !curCh->map ) { // if this chunk has no (persistent) map
 		// create a new map
-		map = new Map(80,43, curCh );
+		map = new Map(Chunk::MAP_WIDTH,Chunk::MAP_HEIGHT, curCh );
 		map->init();
 	} else {
 		map = curCh->map;

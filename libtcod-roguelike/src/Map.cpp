@@ -259,7 +259,7 @@ void Map::init() {
 			switch(chunk->terrainData.roomCreation) {
 				case TD::RoomCreation::DIG_RANDOM:
 				{
-					bsp.splitRecursive(NULL,4,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
+					bsp.splitRecursive(NULL,8,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
 
 					listener.state = BspListener::DIG_RND;
 					listener.dig_rnd_mod = 0.4;
@@ -269,7 +269,7 @@ void Map::init() {
 				case TD::RoomCreation::DIG:
 				{
 					TCODBsp bsp(0,0,width,height);
-					bsp.splitRecursive(NULL,6,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
+					bsp.splitRecursive(NULL,8,ROOM_MIN_SIZE,ROOM_MIN_SIZE,8.0f,8.0f);
 					BspListener listener(*this);
 					listener.state = BspListener::DEFAULT;
 					bsp.traverseInvertedLevelOrder(&listener,NULL);

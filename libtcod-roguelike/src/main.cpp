@@ -1,6 +1,6 @@
 #include "main.hpp"
 
-Engine engine(80,50);
+Engine engine(110,65);
 
 int main() {
 	engine.gameMenu();

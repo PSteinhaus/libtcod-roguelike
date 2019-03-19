@@ -3,6 +3,8 @@
 struct Chunk : public Persistent
 {
 	static const int size = 100;
+	static const int MAP_WIDTH = 120;
+	static const int MAP_HEIGHT = 70;
 	bool persistentMap;
 	Map* map;
 	enum BroadType {
