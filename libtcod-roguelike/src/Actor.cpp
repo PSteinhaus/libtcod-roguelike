@@ -22,9 +22,11 @@ void Actor::update() {
 	if ( ai ) ai->update(this);
 }
 
-void Actor::render() const {
-	TCODConsole::root->setChar(x,y,ch);
-	TCODConsole::root->setCharForeground(x,y,col);
+void Actor::render(TCODConsole* con, int xOffset, int yOffset) const {
+	const int renderX = x-xOffset;
+	const int renderY = y-yOffset;
+	con->setChar(renderX,renderY,ch);
+	con->setCharForeground(renderX,renderY,col);
 }
 
 float Actor::getDistance(int cx, int cy) const {

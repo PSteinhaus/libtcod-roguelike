@@ -20,7 +20,7 @@ public:
 	bool isWall(int x, int y) const;
 	Tile* tileAt(int x, int y) const;
 	bool canWalk(int x, int y) const;
-	void render() const;
+	void render(TCODConsole* con, int xOffset, int yOffset) const;
 	void addMonster(int x, int y);
 	void addItem(int x, int y);
 	void addActor(Actor* actor);

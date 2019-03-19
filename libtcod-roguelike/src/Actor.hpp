@@ -25,7 +25,7 @@ public:
 	Actor(int x, int y, int ch, const char* name, const TCODColor& col, float volume = 0, float weight = 0);
 	virtual ~Actor();
 	void update();
-	void render() const;
+	void render(TCODConsole* con, int xOffset, int yOffset) const;
 	float getDistance(int cx, int cy) const;
 	float getVolume() const;
 	bool onActorsList() const;

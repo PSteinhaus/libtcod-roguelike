@@ -1,11 +1,15 @@
 #include "main.hpp"
 
-void Tile::render() const {
-	if ( engine.map->isInFov(x,y) )
-		TCODConsole::root->setCharForeground(x,y, color() );
-	else
-		TCODConsole::root->setCharForeground(x,y, TCODColor::darkestGrey );
-	TCODConsole::root->setChar( x,y, ch() );
+void Tile::render(TCODConsole* con, int xOffset, int yOffset) const {
+	if ( engine.camera->isOnCamera(x,y) ) {
+		const int renderX = x-xOffset;
+		const int renderY = y-yOffset;
+		if ( engine.map->isInFov(x,y) )
+			con->setCharForeground(renderX,renderY, color() );
+		else
+			con->setCharForeground(renderX,renderY, TCODColor::darkestGrey );
+		con->setChar( renderX,renderY, ch() );
+	}
 }
 
 Tile* Tile::createByType(FieldType type, int x, int y) {

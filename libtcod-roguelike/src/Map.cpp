@@ -396,10 +396,14 @@ bool Map::randomFreeField(int x0, int y0, int width0, int height0 ,int* x, int* 
 	return ( (!wall && canWalk(*x,*y)) || (wall && !isWall(*x,*y)) );
 }
 
-void Map::render() const {
-	for (int x = 0; x < width; ++x)
-		for (int y = 0; y < height; ++y) {
+void Map::render(TCODConsole* con, int xOffset, int yOffset) const {
+	const int cWidth = con->getWidth();
+	const int cHeight = con->getHeight();
+
+	for (int x = 0; x < cWidth; ++x)
+		for (int y = 0; y < cHeight; ++y) {
 			//if ( isExplored(x,y) )
-			tileAt(x,y)->render();
+			if ( inMap( x+xOffset,y+yOffset ) )
+				tileAt(x+xOffset,y+yOffset)->render(con, xOffset,yOffset);
 		}
 }

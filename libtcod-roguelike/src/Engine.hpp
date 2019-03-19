@@ -22,6 +22,7 @@ public :
 	static const int worldDepth = 10;
 	int depth;
 	Gui* gui;
+	Camera* camera;
 	int x;
 	int y;
 	Chunk* world[worldSize][worldSize][worldDepth];
@@ -42,6 +43,7 @@ public :
 	void removeActorFromPos(Actor* actor);
 	void moveActor(Actor* actor, int x, int y);
 	int totalActors() const;
+	void followPlayer();
 	// Tiles
 	Tile* tileAt(int x, int y) const;
 

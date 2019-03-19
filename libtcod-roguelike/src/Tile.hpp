@@ -16,7 +16,7 @@ public:
 	Tile(int x, int y) : explored(false), x(x), y(y) {};
 	//Tile(Tile* oldTile) : explored(oldTile->explored), x(oldTile->x), y(oldTile->y) {};
 	virtual ~Tile() {};
-	void render() const;
+	void render(TCODConsole* con, int xOffset, int yOffset) const;
 	virtual void load(TCODZip& zip);
 	virtual void save(TCODZip& zip);
 	static Tile* create(TCODZip& zip);

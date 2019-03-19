@@ -7,6 +7,7 @@ Engine::Engine(int screenWidth, int screenHeight) : player(NULL), map(NULL), gam
 	TCOD_console_set_custom_font("terminal16x16.png", 6, 16, 16);
 	TCODConsole::initRoot(screenWidth, screenHeight, "witchRogue prototype", false, TCOD_RENDERER_GLSL);
 	gui = new Gui();
+	camera = new Camera(0,0, screenWidth, 43);
 	for(int i=0; i<worldSize; i++)
 		for(int j=0; j<worldSize; j++)
 			for(int k=0; k<worldDepth; k++)
@@ -34,7 +35,6 @@ void Engine::init() {
 	player->ai = new PlayerAi();
 	player->container = new Container(26,8);
 	player->stomach = new Stomach(4000,2,80,0,6,4000);
-
 	player->body = new Body();
 	player->body->parts.push( new BodyPart(2, BodyPart::HAND, BodyPart::RING) );
 	player->body->parts.push( new BodyPart(2, BodyPart::HAND, BodyPart::RING) );
@@ -42,8 +42,8 @@ void Engine::init() {
 	player->body->parts.push( new BodyPart(1, BodyPart::TORSO) );
 	player->body->parts.push( new BodyPart(1, BodyPart::LEGS) );
 	player->body->parts.push( new BodyPart(1, BodyPart::FEET) );
-
 	addActor(player);
+
 	map->init();
 	gui->message(TCODColor::red,"Welcome stranger.");
 	gameStatus = NEW_MAP;
@@ -66,10 +66,13 @@ void Engine::terminate() {
 Engine::~Engine() {
 	terminate();
 	delete gui;
+	delete camera;
 }
 
 void Engine::update() {
-	if ( gameStatus == NEW_TURN || gameStatus == STARTUP || gameStatus == NEW_MAP ) map->computeFov();
+	if ( gameStatus == STARTUP || gameStatus == NEW_MAP ) {
+		followPlayer();
+	}
 	gameStatus=IDLE;
 
 	TCODSystem::checkForEvent(TCOD_EVENT_KEY_PRESS, &lastKey, NULL);
@@ -78,6 +81,7 @@ void Engine::update() {
 	}
 	player->update();
 	if ( gameStatus == NEW_TURN ) {
+		followPlayer();
 		player->stomach->digest(player);
 		for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
 			Actor* actor=*it;
@@ -91,39 +95,8 @@ void Engine::update() {
 
 void Engine::render() {
 	TCODConsole::root->clear();
-	// draw the map
-	map->render();
-	// draw the actors
-	enum DrawState { STRUCTURES, ITEMS, CREATURES, DONE } state = STRUCTURES;
-	while ( state != DONE ) {
-		for (auto it=actorsBegin(); it!=actorsEnd(); it++) {
-			Actor* actor = *it;
-			switch(state) {
-				case STRUCTURES:
-					// draw dead non-items first
-					if ( actor->destructible || actor->pickable ) continue;
-				break;
-				case ITEMS:
-					// draw items
-					if ( !actor->pickable ) continue;
-				break;
-				case CREATURES:
-					// draw the rest
-					if ( !actor->destructible || actor->pickable ) continue;
-				break;
-				default:;
-			}
-			// if in sight (or !fovOnly)
-			if ( actor != player && map->inMap(actor->x,actor->y) && ((!actor->fovOnly && map->isExplored(actor->x,actor->y))
-				|| map->isInFov(actor->x,actor->y)) )
-			{
-				actor->render();
-			}
-		}
-		state = (DrawState)( ((int)state)+1 ); //state++
-	}
-
-	player->render();
+	// draw everything the camera sees
+	camera->render();
 	// show the player's stats
 	gui->render();
 }
@@ -203,6 +176,11 @@ void Engine::addActor(Actor* actor, int x, int y) {
 
 int Engine::totalActors() const {
 	return actors.size();
+}
+
+void Engine::followPlayer() {
+	map->computeFov();
+	camera->setToPos( player->x - (screenWidth/2), player->y - (43/2) );
 }
 
 Tile* Engine::tileAt(int x, int y) const {

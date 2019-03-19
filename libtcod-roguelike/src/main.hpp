@@ -31,5 +31,6 @@ class Chunk;
 #include "Tile.hpp"
 #include "Map.hpp"
 #include "Chunk.hpp"
+#include "Camera.hpp"
 #include "Gui.hpp"
 #include "Engine.hpp"
